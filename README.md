@@ -10,7 +10,7 @@ Simple inspirational quotes. Usage:
 
 `quoter config` - configuration
 
-`quoter gui [ day | number | config ]` - gui (with kdialog), same as above
+`quoter gui [ random | day | number | config ]` - gui (with kdialog), same as above
 
 You can use custom file witch quotes with pattern `author(divider)quote)` for example:
 ```
