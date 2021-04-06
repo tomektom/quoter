@@ -3,30 +3,39 @@
 #: Simple inspirational quotes. Usage:
 #:      quoter                                  – display random quote
 #:      quoter day                              - display quote of day
-#:      quoter number                           - display quote from this line
+#:      quoter num <int>                        - display quote from this line
 #:      quoter config                           - configuration
-#:      quoter gui [ day | number | config ]    - gui (with kdialog), same as above
+#:      quoter gui [ day | num <int> | config ] - gui (with kdialog), same as above
 #: You can use custom file witch quotes with pattern `author(divider)quote)` for example:
 #: René Descartes;Cogito ergo sum
 
 # languages
 __lang_pl() {
     echo "langpl"
-    displaytitle="Twój cytat"
+    displayTitle="Twój cytat"
     unknown="Spotkano nieznany błąd"
     numerr="Błędna liczba"
     null="Nie podano parametru"
-    quest="Co chcesz zrobić?"
+    firstRun="Uruchomiono quoter pierwszy raz lub nie znaleziono konfiguracji. Wybierz opcję:\n 1) Zastosuj domyślne ustawienia\n 2) Skonfiguruj quoter"
+    configChanged="Zmienono konfigurację"
+    chosePath="Podaj pełną ścieżkę do pliku z cytatami"
+    choseDivider="Podaj rozdzielacz pól"
+    question="Co chcesz zrobić? dostępne opcje:\n 1) Losowy cytat\n 2) Cytat dnia\n 3) Wybrany cytat"
 }
 __lang_eng() {
     echo "langeng"
-    displaytitle="Your quote"
+    displayTitle="Your quote"
     unknown="Unknown error"
     numerr="Wrong number"
-    null="Not given parameter"
-    quest="What you want do?"
+    null="Missing parameter"
+    firstRun="You run quoter first time or configuration not found. Choose option:\n 1) Set default settings\n 2) Configure quoter"
+    configChanged="Configuration changed"
+    chosePath="Enter full path to quotes file"
+    choseDivider="Enter field divider"
+    question=""
 }
 __setlang() {
+    echo "setlang"
     case "$LANG" in
         pl*) __lang_pl ;;
         *) __lang_eng
@@ -34,22 +43,49 @@ __setlang() {
 }
 
 # config checking and initial parameters
+__firstrun() {
+    echo "firstrun"
+    touch "$config"
+    __display first
+    read x
+    case "$x" in
+        "1") __default ;;
+        "2") __configchange
+    esac
+}
+
+__default() {
+    echo "default"
+    echo "file=$dir/quotes.csv" >> "$config"
+    echo "divider=@" >> "$config"
+    echo "$configChanged"
+    exit 1
+}
+
 __configcheck() {
     echo "configcheck"
-    config="$HOME/.config/quoter.conf"
+    config="$dir/quoter.conf"
     if [[ ! -e "$config" ]]
     then
-        echo "brak configu"
+        __firstrun
     else
-        echo "config istnieje"
+        source $config
+        # todo check if this config is ok
     fi
-    file="/home/tomek/Git/quoter/quotes.csv"
-    divider="@"
     lines=$(wc -l < $file)
 }
 
 __configchange() {
     echo "configchange"
+    rm -f "$config"
+    touch "$config"
+    __display chosepath
+    read pathToFile
+    echo "file=$pathToFile" >> "$config"
+    __display chosedivider
+    read customDivider
+    echo "divider=$customDivider" >> "$config"
+    exit 1
 }
 
 # quote picker
@@ -60,18 +96,21 @@ __getquote() {
     quote=$(echo "$line" | cut -f2 -d "$divider")
 }
 
-# functions for display messages
+# display messages and errors
 __display() {
     echo "display"
-    case "$0" in
-        "quest") echo "$quest" ;;
+    case "$1" in
+        "interactive") echo "$question" ;;
+        "first") echo -e "$firstRun" ;;
+        "chosepath") echo "$chosePath" ;;
+        "chosedivider") echo "$choseDivider" ;;
         *) echo -e "\n$quote\n\n\t\e[1m$author\e[0m\n"
     esac
 }
 
 __displaygui() {
     echo "displaygui"
-    kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displaytitle"
+    kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displayTitle"
 }
 
 __error() {
@@ -145,17 +184,20 @@ __day() {
 
 __config() {
     echo "config"
+    __configchange
 }
 
 
-# unfinished
+# todo interactive chosing in cli
 __interactive() {
     echo "interactive"
-    __display quest
-    read quest
-    case $quest in
+    __display interactive
+    read answer
+    case $answer in
         "help") __help ;;
-        "random") __random
+        "random") __random ;;
+        "day") __day ;;
+        "number") __number
     esac
     __getquote
     __display
@@ -197,6 +239,7 @@ __daygui() {
 
 secpar="$2"
 thirdpar="$3"
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 __setlang
 __configcheck
