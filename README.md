@@ -6,13 +6,16 @@ Simple inspirational quotes. Usage:
 
 `quoter day` - display quote of day
 
-`quoter number` - display quote from this line
+`quoter num [ <int> ]` - display quote from this line
 
 `quoter config` - configuration
 
-`quoter gui [ random | day | number | config ]` - gui (with kdialog), same as above
+`quoter int` - interactive mode
+
+`quoter gui [ random | day | num [ <int> ] | config ]` - gui (with kdialog), same as above
 
 You can use custom file witch quotes with pattern `author(divider)quote)` for example:
+
 ```
 René Descartes;Cogito ergo sum
 ```
