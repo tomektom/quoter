@@ -4,6 +4,8 @@ Simple inspirational quotes. Usage:
 
 `quoter` – display random quote
 
+`quoter help` - display help
+
 `quoter day` - display quote of day
 
 `quoter num [ <int> ]` - display quote from this line
