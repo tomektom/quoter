@@ -1,38 +1,86 @@
 #!/bin/bash
 
-#: Simple inspirational quotes. Usage:
-#:      quoter                                  – display random quote
-#:      quoter day                              - display quote of day
-#:      quoter num <int>                        - display quote from this line
-#:      quoter config                           - configuration
-#:      quoter gui [ day | num <int> | config ] - gui (with kdialog), same as above
-#: You can use custom file witch quotes with pattern `author(divider)quote)` for example:
-#: René Descartes;Cogito ergo sum
+# Default help
+#eng: Simple inspirational quotes. Usage:
+#eng:   quoter                                      – display random quote
+#eng:   quoter day                                  - display quote of day
+#eng:   quoter num [ <int> ]                        - display quote from this line
+#eng:   quoter config                               - configuration
+#eng:   quoter int                                  - interactive mode
+#eng:   quoter gui [ day | num [ <int> ] | config ] - gui (with kdialog)
+#eng: You can use custom file witch quotes with pattern `author(divider)quote)`, example:
+#eng: René Descartes;Cogito ergo sum
 
+# Polski help
+#pl: Proste inspirujące cytaty. Instrukcja:
+#pl:    quoter                                      - wyświetl losowy cytat
+#pl:    quoter day                                  - wyświetl cytat dnia
+#pl:    quoter num [ <int> ]                        - wyświetl cytat z podanej linii
+#pl:    quoter int                                  - tryb interaktywny
+#pl:    quoter config                               - konfiguracja
+#pl:    quoter gui [ day | num [ <int> ] | config ] - gui (z wykorzystaniem kdialog) 
+#pl: Możesz wykorzystać własny plik z cytatami według wzoru 'autor(rozdzielacz)cytat', przykład:
+#pl: René Descartes;Cogito ergo sum
+
+
+###################################################################
 # languages
+###################################################################
+
 __lang_pl() {
     echo "langpl"
+    quoterTitle="Quoter"
+    langHelp="#pl:"
     displayTitle="Twój cytat"
     unknown="Spotkano nieznany błąd"
     numerr="Błędna liczba"
     null="Nie podano parametru"
     firstRun="Uruchomiono quoter pierwszy raz lub nie znaleziono konfiguracji. Wybierz opcję:\n 1) Zastosuj domyślne ustawienia\n 2) Skonfiguruj quoter"
+    firstRunGUI="Uruchomiono quoter pierwszy raz lub nie znaleziono konfiguracji. Wybierz opcję:"
     configChanged="Zmienono konfigurację"
     chosePath="Podaj pełną ścieżkę do pliku z cytatami"
     choseDivider="Podaj rozdzielacz pól"
-    question="Co chcesz zrobić? dostępne opcje:\n 1) Losowy cytat\n 2) Cytat dnia\n 3) Wybrany cytat"
+    question="Co chcesz zrobić? dostępne opcje:\n 1) Losowy cytat\n 2) Cytat dnia\n 3) Wybrany cytat\n 4) Zakończ"
+    chosePathGUI="Wybierz plik z cytatami"
+    configurationTextTitle="Konfiguracja"
+    choseOption="Wybierz opcję:"
+    choiceDefault="Zastosuj domyślne ustawienia"
+    choiceConfiguration="Wybierz własną konfigurację"
+    iWantNumber="Wprowadź wartość z zakresu od 1 do"
+    quoteChoser="Wybór cytatu"
+    randomChoice="Losowy cytat"
+    dayChoice="Cytat dnia"
+    numberChoice="Wybrany cytat"
+    configChoice="Skonfiguruj Quoter"
+    cancelled="Anulowano operację"
+    
 }
 __lang_eng() {
     echo "langeng"
+    quoterTitle="Quoter"
+    langHelp="#eng:"
     displayTitle="Your quote"
     unknown="Unknown error"
     numerr="Wrong number"
     null="Missing parameter"
     firstRun="You run quoter first time or configuration not found. Choose option:\n 1) Set default settings\n 2) Configure quoter"
+    firstRunGUI="You run quoter first time or configuration not found. Choose option:"
     configChanged="Configuration changed"
     chosePath="Enter full path to quotes file"
     choseDivider="Enter field divider"
     question=""
+    chosePathGUI=""
+    configurationTextTitle=""
+    choseOption="Choose option:"
+    choiceDefault=""
+    choiceConfiguration=""
+    iWantNumber=""
+    quoteChoser=""
+    randomChoice=""
+    dayChoice=""
+    numberChoice=""
+    configChoice=""
+    cancelled=""
 }
 __setlang() {
     echo "setlang"
@@ -41,8 +89,10 @@ __setlang() {
         *) __lang_eng
     esac
 }
+###################################################################
+# config manipulations
+###################################################################
 
-# config checking and initial parameters
 __firstrun() {
     echo "firstrun"
     touch "$config"
@@ -50,67 +100,86 @@ __firstrun() {
     read x
     case "$x" in
         "1") __default ;;
-        "2") __configchange
+        "2") __config
+    esac
+}
+
+__firstrungui() {
+    echo "firstrungui"
+    touch "$config"
+    __displaygui first
+    __iscancelledrm
+    echo "ostatnie: $?"
+    echo "wybór: $choice"
+    case "$choice" in
+        "default") __default 1 ;;
+        "custom") __configui ;;
+        *) exit 1
     esac
 }
 
 __default() {
     echo "default"
-    echo "file=$dir/quotes.csv" >> "$config"
+    echo "fileQuotes=$dir/quotes.csv" >> "$config"
     echo "divider=@" >> "$config"
-    echo "$configChanged"
+    case $1 in
+        "1") __displaygui configchanged ;;
+        *) __display configchanged
+    esac
     exit 1
 }
 
 __configcheck() {
     echo "configcheck"
-    config="$dir/quoter.conf"
     if [[ ! -e "$config" ]]
     then
-        __firstrun
+        case "$firstpar" in
+            "gui") __firstrungui ;;
+            *) __firstrun
+        esac
     else
-        source $config
+        source "$config"
         # todo check if this config is ok
     fi
-    lines=$(wc -l < $file)
+    lines=$(wc -l < "$fileQuotes")
 }
 
-__configchange() {
-    echo "configchange"
+__configchanger() {
+    echo "configchanger"
     rm -f "$config"
     touch "$config"
-    __display chosepath
-    read pathToFile
-    echo "file=$pathToFile" >> "$config"
-    __display chosedivider
-    read customDivider
+    echo "fileQuotes=$pathToFile" >> "$config"
     echo "divider=$customDivider" >> "$config"
-    exit 1
 }
 
-# quote picker
-__getquote() {
-    echo "getquote"
-    line=$(sed -n "$getline p" "$file")
-    author=$(echo "$line" | cut -f1 -d "$divider")
-    quote=$(echo "$line" | cut -f2 -d "$divider")
-}
+###################################################################
+# display messages, errors and help
+###################################################################
 
-# display messages and errors
 __display() {
     echo "display"
     case "$1" in
-        "interactive") echo "$question" ;;
+        "interactive") echo -e "$question" ;;
         "first") echo -e "$firstRun" ;;
         "chosepath") echo "$chosePath" ;;
         "chosedivider") echo "$choseDivider" ;;
-        *) echo -e "\n$quote\n\n\t\e[1m$author\e[0m\n"
+        "configchanged") echo "$configChanged" ; exit 0 ;;
+        "iwantnum") echo "$iWantNumber $lines:" ;;
+        *) echo -e "\n$quote\n\n\t\e[1m$author\e[0m\n" ; exit 0
     esac
 }
 
 __displaygui() {
     echo "displaygui"
-    kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displayTitle"
+    case "$1" in
+        "interactive") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$configChoice") ;;
+        "first") choice=$(kdialog --menu "$firstRunGUI" "default" "$choiceDefault" "custom" "$choiceConfiguration") ;;
+        "chosepath") pathToFile=$(kdialog --title "$chosePathGUI" --getopenfilename "$HOME") ;;
+        "chosedivider") customDivider=$(kdialog --title "$configurationTextTitle" --inputbox "$choseDivider" "") ;;
+        "configchanged") kdialog --msgbox "$configChanged" --title "$name" ; exit 0 ;;
+        "iwantnum") secpar=$(kdialog --inputbox "$iWantNumber $lines:" "1" --title "$quoteChoser");;
+        *) kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displayTitle" ; exit 0
+    esac
 }
 
 __error() {
@@ -124,35 +193,38 @@ __error() {
 
 __errorgui() {
     case "$1" in
-        "num") kdialog --error "$numerr: $secpar" ;;
-        "null") kdialog --error "$null" ;;
-        *) kdialog --error "$unknown"
+        "num") kdialog --title "$quoterTitle" --error "$numerr: $secpar" ;;
+        "null") kdialog --title "$quoterTitle" --error "$null" ;;
+        "cancel") kdialog --title "$quoterTitle" --error "$cancelled" ;;
+        *) kdialog --title "$quoterTitle" --error "$unknown"
     esac
     exit 1
 }
 
-# cli functions
 __help() {
-    grep "^#:" "$0" | while read DOC; do printf '%s\n' "${DOC###:}"; done
-    exit 1
+    grep "^$langHelp" "$0" | while read DOC; do printf '%s\n' "${DOC##$langHelp}"; done
+    exit 0
 }
 
-__random() {
-    echo "random"
-    getline=$((1 + "$RANDOM" % "$lines"))
-    __getquote
-    case "$1" in
-        "1") __displaygui ;;
-        *) __display
-    esac
+###################################################################
+# core functions
+###################################################################
+
+# quote picker
+__getquote() {
+    echo "getquote"
+    line=$(sed -n "$getline p" "$fileQuotes")
+    author=$(echo "$line" | cut -f1 -d "$divider")
+    quote=$(echo "$line" | cut -f2 -d "$divider")
 }
 
+# todo naprawić
 __number() {
     echo "number"
     if [[ ! "$secpar" =~ ^[0-9]+$ ]]
     then
-        case "$1" in
-            "1") __errorgui num ;;
+        case "$firstpar" in
+            "gui") __errorgui num ;;
             *) __error num
         esac
     fi
@@ -160,96 +232,181 @@ __number() {
     then
         getline="$secpar"
     else
-        case "$1" in
-            "1") __errorgui num ;;
+        case "$firstpar" in
+            "gui") __errorgui num ;;
             *) __error num
         esac
     fi
     __getquote
-    case "$1" in
-        "1") __displaygui ;;
-        *) __display
-    esac
 }
 
 __day() {
     echo "day"
     getline=$(date +%j)
     __getquote
-    case "$1" in
-        "1") __displaygui ;;
-        *) __display
-    esac
 }
 
-__config() {
-    echo "config"
-    __configchange
+__random() {
+    echo "random"
+    getline=$((1 + "$RANDOM" % "$lines"))
+    __getquote
 }
 
+###################################################################
+# cli functions
+###################################################################
 
-# todo interactive chosing in cli
-__interactive() {
+__configcli() {
+    echo "configcli"
+    __display chosepath
+    read pathToFile
+    __display chosedivider
+    read customDivider
+    __configchanger
+    __display configchanged
+}
+
+__randomcli() {
+    echo "randomcli"
+    __random
+    __display
+}
+
+__numbercli() {
+    echo "numbercli"
+    if [[ ! $secpar ]]
+    then
+        __display iwantnum
+        read secpar
+    fi
+    __number
+    __display
+}
+
+__daycli() {
+    echo "daycli"
+    __day
+    __display
+}
+
+__interactivecli() {
     echo "interactive"
     __display interactive
     read answer
     case $answer in
-        "help") __help ;;
-        "random") __random ;;
-        "day") __day ;;
-        "number") __number
+        "1") __random ;;
+        "2") __day ;;
+        "3") __numbercli ;; # todo poprawić, powinno iść do __number
+        #"3") __number ;;
+        "4") exit 0
     esac
-    __getquote
     __display
 }
 
+###################################################################
 # gui functions
+###################################################################
+
+__iscancelled() {
+    if [[ $? = 1 ]]
+    then
+        __errorgui cancel
+    fi
+}
+
+__iscancelledrm() {
+    if [[ $? = 1 ]]
+    then
+        rm -f $config
+        __errorgui cancel
+    fi
+}
+
 __gui() {
     echo "gui"
     case "$secpar" in
         "config") __configui ;;
         "day") __daygui ;;
         "num") __numbergui ;;
-        *) __randomgui
+        "random") __randomgui ;;
+        *) __interactivegui
     esac
 }
 
 __configui() {
     echo "configui"
+    __displaygui chosepath
+    __iscancelledrm
+    __displaygui chosedivider
+    __iscancelledrm
+    __configchanger
+    __displaygui configchanged
+}
+
+__interactivegui() {
+    echo "interactivegui"
+    __displaygui interactive
+    case $answer in
+        "1") __random ;;
+        "2") __day ;;
+        "3") __numbergui ;; # todo poprawić, powinno iść do __number
+        "4") __configui ;;
+        #"3") __number ;;
+        *) exit 0
+    esac
+    __displaygui
 }
 
 __randomgui() {
     echo "randomgui"
-    __random 1
+    __random
+    __displaygui
 }
 
 __numbergui() {
     echo "numbergui"
-    secpar=$thirdpar
-    __number 1
+    if [[ $thirdpar ]]
+    then
+        secpar=$thirdpar
+    else
+        __displaygui iwantnum
+        __iscancelled
+    fi
+    __number
+    __displaygui
 }
 
 __daygui() {
     echo "daygui"
-    __day 1
+    __day
+    __displaygui
 }
 
-############################################################
-# end of functions, main program
+###################################################################
+# end functions, main program
+###################################################################
 
+firstpar="$1"
 secpar="$2"
 thirdpar="$3"
-dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+dir="$( cd "$( dirname "$0" )" &> /dev/null && pwd )"  # full path to directory where is placed this script
+config="$dir/quoter.conf"
 
 __setlang
 __configcheck
 
-case "$1" in
+case "$firstpar" in
     "gui") __gui ;;
-    "config") __config ;;
-    "day") __day ;;
-    "num") __number ;;
+    "config") __configcli ;;
+    "day") __daycli ;;
+    "num") __numbercli ;;
     "help") __help ;;
-    "int") __interactive ;;
-    *) __random
+    "int") __interactivecli ;;
+    *) __randomcli
 esac
+
+# todo add alias .bashrc/.zshrc
+# todo add desktop file
+# todo poprawić __number
+# todo sprawdzanie poprawności wpisanej ścieżki przy configu
+# todo inne gui jeśli nie ma kdialog: zenity, yad
