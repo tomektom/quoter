@@ -3,6 +3,7 @@
 # Default help
 #eng: Simple inspirational quotes. Usage:
 #eng:   quoter                                      – display random quote
+#eng:   quoter help                                 - display help
 #eng:   quoter day                                  - display quote of day
 #eng:   quoter num [ <int> ]                        - display quote from this line
 #eng:   quoter config                               - configuration
@@ -14,6 +15,7 @@
 # Polski help
 #pl: Proste inspirujące cytaty. Instrukcja:
 #pl:    quoter                                      - wyświetl losowy cytat
+#pl:    quoter help                                 - wyświetl pomoc
 #pl:    quoter day                                  - wyświetl cytat dnia
 #pl:    quoter num [ <int> ]                        - wyświetl cytat z podanej linii
 #pl:    quoter int                                  - tryb interaktywny
