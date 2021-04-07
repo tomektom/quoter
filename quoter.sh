@@ -54,6 +54,7 @@ __lang_pl() {
     numberChoice="Wybrany cytat"
     configChoice="Skonfiguruj Quoter"
     cancelled="Anulowano operację"
+    wrongPathError="Podano błędną ścieżkę"
     
 }
 __lang_eng() {
@@ -81,6 +82,7 @@ __lang_eng() {
     numberChoice="Selected quote"
     configChoice="Configure Quoter"
     cancelled="Operation cancelled"
+    wrongPathError="Entered wrong path"
 }
 __setlang() {
     case "$LANG" in
@@ -98,7 +100,7 @@ __firstrun() {
     read x
     case "$x" in
         "1") __default ;;
-        "2") __config
+        "2") __configcli
     esac
 }
 
@@ -106,8 +108,6 @@ __firstrungui() {
     touch "$config"
     __displaygui first
     __iscancelledrm
-    echo "ostatnie: $?"
-    echo "wybór: $choice"
     case "$choice" in
         "default") __default 1 ;;
         "custom") __configui ;;
@@ -178,6 +178,7 @@ __error() {
     case "$1" in
         "num") echo -e "$numerr: $secpar" ;;
         "null") echo -e "$null" ;;
+        "wrongpath") echo "$wrongPathError" ;;
         *) echo -e "$unknown"
     esac
     exit 1
@@ -247,6 +248,10 @@ __random() {
 __configcli() {
     __display chosepath
     read pathToFile
+    if [[ ! -r pathToFile ]]
+    then
+        __error wrongpath
+    fi
     __display chosedivider
     read customDivider
     __configchanger
