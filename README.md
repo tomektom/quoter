@@ -16,7 +16,7 @@ Simple inspirational quotes. Usage:
 
 `quoter gui [ random | day | num [ <int> ] | config ]` - gui (with kdialog), same as above
 
-You can use custom file witch quotes with pattern `author(divider)quote)` for example:
+You can use custom file witch quotes with pattern `author(divider)quote` for example:
 
 ```
 René Descartes;Cogito ergo sum

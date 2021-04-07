@@ -122,7 +122,7 @@ __default() {
         "1") __displaygui configchanged ;;
         *) __display configchanged
     esac
-    exit 1
+    exit 0
 }
 
 __configcheck() {
@@ -168,7 +168,7 @@ __displaygui() {
         "first") choice=$(kdialog --menu "$firstRunGUI" "default" "$choiceDefault" "custom" "$choiceConfiguration") ;;
         "chosepath") pathToFile=$(kdialog --title "$chosePathGUI" --getopenfilename "$HOME") ;;
         "chosedivider") customDivider=$(kdialog --title "$configurationTextTitle" --inputbox "$choseDivider" "") ;;
-        "configchanged") kdialog --msgbox "$configChanged" --title "$name" ; exit 0 ;;
+        "configchanged") kdialog --title "$quoterTitle" --msgbox "$configChanged" ; exit 0 ;;
         "iwantnum") secpar=$(kdialog --inputbox "$iWantNumber $lines:" "1" --title "$quoteChoser");;
         *) kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displayTitle" ; exit 0
     esac
@@ -252,7 +252,7 @@ __configcli() {
     then
         if [[ -z $(cat $config) ]]
         then
-            rm -f $config
+            rm -f "$config"
         fi
         __error wrongpath
     fi
@@ -309,7 +309,7 @@ __iscancelled() {
 __iscancelledrm() {
     if [[ $? = 1 ]]
     then
-        rm -f $config
+        rm -f "$config"
         __errorgui cancel
     fi
 }
