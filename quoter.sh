@@ -250,6 +250,10 @@ __configcli() {
     read pathToFile
     if [[ ! -r pathToFile ]]
     then
+        if [[ -z $(cat $config) ]]
+        then
+            rm -f $config
+        fi
         __error wrongpath
     fi
     __display chosedivider
