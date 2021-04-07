@@ -169,7 +169,7 @@ __displaygui() {
         "chosepath") pathToFile=$(kdialog --title "$chosePathGUI" --getopenfilename "$HOME") ;;
         "chosedivider") customDivider=$(kdialog --title "$configurationTextTitle" --inputbox "$choseDivider" "") ;;
         "configchanged") kdialog --title "$quoterTitle" --msgbox "$configChanged" ; exit 0 ;;
-        "iwantnum") secpar=$(kdialog --inputbox "$iWantNumber $lines:" "1" --title "$quoteChoser");;
+        "iwantnum") secpar=$(kdialog --title "$quoteChoser" --inputbox "$iWantNumber $lines:" "1");;
         *) kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displayTitle" ; exit 0
     esac
 }
@@ -212,6 +212,10 @@ __getquote() {
 
 # todo naprawić
 __number() {
+    case $firstpar in
+        "gui") __iwantnumgui ;;
+        *) __iwantnumcli
+    esac
     if [[ ! "$secpar" =~ ^[0-9]+$ ]]
     then
         case "$firstpar" in
@@ -268,13 +272,21 @@ __randomcli() {
 }
 
 __numbercli() {
+#    if [[ ! $secpar ]]
+#    then
+#        __display iwantnum
+#        read secpar
+#    fi
+    __number
+    __display
+}
+
+__iwantnumcli() {
     if [[ ! $secpar ]]
     then
         __display iwantnum
         read secpar
     fi
-    __number
-    __display
 }
 
 __daycli() {
@@ -288,8 +300,7 @@ __interactivecli() {
     case $answer in
         "1") __random ;;
         "2") __day ;;
-        "3") __numbercli ;; # todo poprawić, powinno iść do __number
-        #"3") __number ;;
+        "3") __number ;;
         "4") exit 0
     esac
     __display
@@ -338,9 +349,8 @@ __interactivegui() {
     case $answer in
         "1") __random ;;
         "2") __day ;;
-        "3") __numbergui ;; # todo poprawić, powinno iść do __number
+        "3") __number ;;
         "4") __configui ;;
-        #"3") __number ;;
         *) exit 0
     esac
     __displaygui
@@ -352,6 +362,18 @@ __randomgui() {
 }
 
 __numbergui() {
+#    if [[ $thirdpar ]]
+#    then
+#        secpar=$thirdpar
+#    else
+#        __displaygui iwantnum
+#        __iscancelled
+#    fi
+    __number
+    __displaygui
+}
+
+__iwantnumgui() {
     if [[ $thirdpar ]]
     then
         secpar=$thirdpar
@@ -359,8 +381,6 @@ __numbergui() {
         __displaygui iwantnum
         __iscancelled
     fi
-    __number
-    __displaygui
 }
 
 __daygui() {
@@ -393,5 +413,4 @@ esac
 
 # todo add alias .bashrc/.zshrc
 # todo add desktop file
-# todo poprawić __number
 # todo inne gui jeśli nie ma kdialog: zenity, yad
