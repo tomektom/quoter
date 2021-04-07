@@ -390,5 +390,4 @@ esac
 # todo add alias .bashrc/.zshrc
 # todo add desktop file
 # todo poprawić __number
-# todo sprawdzanie poprawności wpisanej ścieżki przy configu
 # todo inne gui jeśli nie ma kdialog: zenity, yad
