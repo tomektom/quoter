@@ -2,25 +2,27 @@
 
 # Default help
 #eng: Simple inspirational quotes. Usage:
-#eng:   quoter                                      – display random quote
-#eng:   quoter help                                 - display help
-#eng:   quoter day                                  - display quote of day
-#eng:   quoter num [ <int> ]                        - display quote from this line
-#eng:   quoter config                               - configuration
-#eng:   quoter int                                  - interactive mode
-#eng:   quoter gui [ day | num [ <int> ] | config ] - gui (with kdialog)
+#eng:   quoter                                                  – display random quote
+#eng:   quoter help                                             - display help
+#eng:   quoter day                                              - display quote of day
+#eng:   quoter num [ <int> ]                                    - display quote from this line
+#eng:   quoter config                                           - configuration
+#eng:   quoter int                                              - interactive mode
+#eng:   quoter loop [ random | num | int ]                      - quoter in loop
+#eng:   quoter gui [ random | day | num [ <int> ] | config ]    - gui (with kdialog)
 #eng: You can use custom file witch quotes with pattern `author(divider)quote)`, example:
 #eng: René Descartes;Cogito ergo sum
 
 # Polski help
 #pl: Proste inspirujące cytaty. Instrukcja:
-#pl:    quoter                                      - wyświetl losowy cytat
-#pl:    quoter help                                 - wyświetl pomoc
-#pl:    quoter day                                  - wyświetl cytat dnia
-#pl:    quoter num [ <int> ]                        - wyświetl cytat z podanej linii
-#pl:    quoter int                                  - tryb interaktywny
-#pl:    quoter config                               - konfiguracja
-#pl:    quoter gui [ day | num [ <int> ] | config ] - gui (z wykorzystaniem kdialog) 
+#pl:    quoter                                                  - wyświetl losowy cytat
+#pl:    quoter help                                             - wyświetl pomoc
+#pl:    quoter day                                              - wyświetl cytat dnia
+#pl:    quoter num [ <int> ]                                    - wyświetl cytat z podanej linii
+#pl:    quoter config                                           - konfiguracja
+#pl:    quoter int                                              - tryb interaktywny
+#pl:    quoter loop random | num | int ]                        - quoter w pętli
+#pl:    quoter gui [ random | day | num [ <int> ] | config ]    - gui (z wykorzystaniem kdialog) 
 #pl: Możesz wykorzystać własny plik z cytatami według wzoru 'autor(rozdzielacz)cytat', przykład:
 #pl: René Descartes;Cogito ergo sum
 
@@ -38,7 +40,7 @@ __lang_pl() {
     null="Nie podano parametru"
     firstRun="Uruchomiono quoter pierwszy raz lub nie znaleziono konfiguracji. Wybierz opcję:\n 1) Zastosuj domyślne ustawienia\n 2) Skonfiguruj quoter"
     firstRunGUI="Uruchomiono quoter pierwszy raz lub nie znaleziono konfiguracji. Wybierz opcję:"
-    configChanged="Zmienono konfigurację"
+    configChanged="Zmieniono konfigurację"
     chosePath="Podaj pełną ścieżkę do pliku z cytatami"
     choseDivider="Podaj rozdzielacz pól"
     question="Co chcesz zrobić? Dostępne opcje:\n 1) Losowy cytat\n 2) Cytat dnia\n 3) Wybrany cytat\n 4) Zakończ"
@@ -95,6 +97,7 @@ __setlang() {
 ###################################################################
 
 __firstrun() {
+    __help
     touch "$config"
     __display first
     read x
@@ -105,9 +108,8 @@ __firstrun() {
 }
 
 __firstrungui() {
-    touch "$config"
     __displaygui first
-    __iscancelledrm
+    __iscancelled
     case "$choice" in
         "default") __default 1 ;;
         "custom") __configui ;;
@@ -116,6 +118,8 @@ __firstrungui() {
 }
 
 __default() {
+    rm -f "$config"
+    touch "$config"
     echo "fileQuotes=$dir/quotes.csv" >> "$config"
     echo "divider=@" >> "$config"
     case $1 in
@@ -153,12 +157,12 @@ __configchanger() {
 __display() {
     case "$1" in
         "interactive") echo -e "$question" ;;
-        "first") echo -e "$firstRun" ;;
+        "first") echo -e "\n$firstRun" ;;
         "chosepath") echo "$chosePath" ;;
         "chosedivider") echo "$choseDivider" ;;
         "configchanged") echo "$configChanged" ; exit 0 ;;
         "iwantnum") echo "$iWantNumber $lines:" ;;
-        *) echo -e "\n$quote\n\n\t\e[1m$author\e[0m\n" ; exit 0
+        *) echo -e "\n$quote\n\n\t\e[1m$author\e[0m\n"
     esac
 }
 
@@ -169,8 +173,8 @@ __displaygui() {
         "chosepath") pathToFile=$(kdialog --title "$chosePathGUI" --getopenfilename "$HOME") ;;
         "chosedivider") customDivider=$(kdialog --title "$configurationTextTitle" --inputbox "$choseDivider" "") ;;
         "configchanged") kdialog --title "$quoterTitle" --msgbox "$configChanged" ; exit 0 ;;
-        "iwantnum") secpar=$(kdialog --title "$quoteChoser" --inputbox "$iWantNumber $lines:" "1");;
-        *) kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displayTitle" ; exit 0
+        "iwantnum") yournumber=$(kdialog --title "$quoteChoser" --inputbox "$iWantNumber $lines:" "1") ;;
+        *) kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displayTitle"
     esac
 }
 
@@ -196,7 +200,6 @@ __errorgui() {
 
 __help() {
     grep "^$langHelp" "$0" | while read DOC; do printf '%s\n' "${DOC##$langHelp}"; done
-    exit 0
 }
 
 ###################################################################
@@ -210,22 +213,21 @@ __getquote() {
     quote=$(echo "$line" | cut -f2 -d "$divider")
 }
 
-# todo naprawić
 __number() {
-    case $firstpar in
+    case $firstpar in # todo zmienić na if, trzeba uwzględnić loop, ważne dla gui
         "gui") __iwantnumgui ;;
         *) __iwantnumcli
     esac
-    if [[ ! "$secpar" =~ ^[0-9]+$ ]]
+    if [[ ! "$yournumber" =~ ^[0-9]+$ ]]
     then
         case "$firstpar" in
             "gui") __errorgui num ;;
             *) __error num
         esac
     fi
-    if [[ "$secpar" -ge 1 ]] && [[ "$secpar" -le $lines ]]
+    if [[ "$yournumber" -ge 1 ]] && [[ "$yournumber" -le $lines ]]
     then
-        getline="$secpar"
+        getline="$yournumber"
     else
         case "$firstpar" in
             "gui") __errorgui num ;;
@@ -233,6 +235,10 @@ __number() {
         esac
     fi
     __getquote
+    if [[ $firstpar = "loop" ]]
+    then
+        unset yournumber
+    fi
 }
 
 __day() {
@@ -269,23 +275,20 @@ __configcli() {
 __randomcli() {
     __random
     __display
+    __isloop
 }
 
 __numbercli() {
-#    if [[ ! $secpar ]]
-#    then
-#        __display iwantnum
-#        read secpar
-#    fi
     __number
     __display
+    __isloop
 }
 
 __iwantnumcli() {
-    if [[ ! $secpar ]]
+    if [[ ! $yournumber ]]
     then
         __display iwantnum
-        read secpar
+        read yournumber
     fi
 }
 
@@ -317,14 +320,6 @@ __iscancelled() {
     fi
 }
 
-__iscancelledrm() {
-    if [[ $? = 1 ]]
-    then
-        rm -f "$config"
-        __errorgui cancel
-    fi
-}
-
 __gui() {
     case "$secpar" in
         "config") __configui ;;
@@ -337,9 +332,9 @@ __gui() {
 
 __configui() {
     __displaygui chosepath
-    __iscancelledrm
+    __iscancelled
     __displaygui chosedivider
-    __iscancelledrm
+    __iscancelled
     __configchanger
     __displaygui configchanged
 }
@@ -359,24 +354,19 @@ __interactivegui() {
 __randomgui() {
     __random
     __displaygui
+    echo "poprzedni parametr: $?" # todo uwzględnić x w okienkach
 }
 
 __numbergui() {
-#    if [[ $thirdpar ]]
-#    then
-#        secpar=$thirdpar
-#    else
-#        __displaygui iwantnum
-#        __iscancelled
-#    fi
     __number
     __displaygui
 }
 
 __iwantnumgui() {
+#    if [[ $thirdpar ]] && [[ ! $firstpar = "loop" ]] # experimental, not tested
     if [[ $thirdpar ]]
     then
-        secpar=$thirdpar
+        yournumber=$thirdpar
     else
         __displaygui iwantnum
         __iscancelled
@@ -386,6 +376,56 @@ __iwantnumgui() {
 __daygui() {
     __day
     __displaygui
+}
+
+###################################################################
+# test
+###################################################################
+
+# todo pododawać 
+__loop() {
+    while [ 0 = 0 ]
+    do
+    case $secpar in
+        "random") __randomcli ;;
+        "num") __numbercli ;;
+        "int") __interactivecli ;;
+#        "gui") __loopgui ;; # todo
+        *) exit 1
+    esac
+    done
+}
+
+__loopgui() {
+    echo "guiloop"
+    case $thirdpar in
+        "random") __randomgui ;; # zamknięcie isexit, warunek wyjścia
+        "num") __numbergui ;; # poprawić, w loopie nie może brać 2 parametru lub z 3 przy interactivegui, musi zawsze pytać
+        *) __interactivegui
+    esac
+}
+
+__isloop() {
+#    echo "isloop"
+    if [[ ! $firstpar = "loop" ]]
+    then
+        exit 0
+    else
+        read x
+        if [[ $x = "q" ]]
+        then
+            exit 0
+        fi
+    fi
+}
+
+# todo dodać, sprawdzajka czy kliknięto x
+__isclosed() {
+    echo "isexit"
+    if [[ $? = 1 ]] || [[ $? = 2 ]]
+    then
+        exit 0
+    fi
 }
 
 ###################################################################
@@ -406,11 +446,46 @@ case "$firstpar" in
     "config") __configcli ;;
     "day") __daycli ;;
     "num") __numbercli ;;
-    "help") __help ;;
+    "help") __help ; exit 0 ;;
     "int") __interactivecli ;;
+    "loop") __loop ;;
     *) __randomcli
 esac
 
+
 # todo add alias .bashrc/.zshrc
-# todo add desktop file
 # todo inne gui jeśli nie ma kdialog: zenity, yad
+# sprawdzenie zaimportowanego configu w __configcheck
+
+# todo add desktop file, notatki:
+# template="$dir/template.desktop"
+# robienie rzeczy
+# cp "$dir/quoter.desktop" "$HOME/.local/share/applications/"
+
+# todo loop dla gui, gui random, random i interactive
+
+# todo dla loop gui sprawdzanie czy player jest odtwarzany – może osobna komenda, wygoda przy aplikacjach typu ktimer
+# notatki:
+# pacmd list-sink-inputs
+# jak wykryje to patrz parametr "state" – running odtwarzane, corked zapauzowane
+# filtrowanie po "application.process.binary" – żeby sprawdzić czy wideo czy muzyka?
+
+# sprawdzenie czy player jest na full screen w przeglądarce
+# qdbus org.kde.plasma.browser_integration /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Fullscreen
+# czy się odtwarza 
+# qdbus org.kde.plasma.browser_integration /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlaybackStatus
+# jeśli tak to wziąć tytuł aktywnego okna
+# xdotool getactivewindow getwindowname
+# i przefiltrować
+
+# state=$(pacmd list-sink-inputs| grep -i "state: running")
+# if [[ $state ]]
+# then
+#    sprawdzenie application.process.binary
+#    jeśli proces należy do vlc (lub innego video playera) to zamknąć, a jeśli do przeglądarki to dalej sprawdzić tytuł okna
+#    xdotool getactivewindow getwindowname
+#    stąd wziąć nazwę karty w której coś jest odtwarzane
+#    qdbus org.mpris.MediaPlayer2.firefox.instance159357 /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Metadata
+#    i porównać
+#    exit
+# fi
