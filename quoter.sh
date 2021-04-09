@@ -132,13 +132,23 @@ __default() {
 __configcheck() {
     if [[ ! -e "$config" ]]
     then
-        case "$firstpar" in
-            "gui") __firstrungui ;;
-            *) __firstrun
-        esac
+        if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
+        then
+            __firstrungui
+        else
+            __firstrun
+        fi
     else
         source "$config"
-        # todo check if this config is ok
+        if [[ ! -r pathToFile ]]
+        then
+            if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
+            then
+                __errorgui
+            else
+                __error
+            fi
+        fi
     fi
     lines=$(wc -l < "$fileQuotes")
 }
@@ -214,25 +224,31 @@ __getquote() {
 }
 
 __number() {
-    case $firstpar in # todo zmienić na if, trzeba uwzględnić loop, ważne dla gui
-        "gui") __iwantnumgui ;;
-        *) __iwantnumcli
-    esac
+    if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
+    then
+        __iwantnumgui
+    else
+        __iwantnumcli
+    fi
     if [[ ! "$yournumber" =~ ^[0-9]+$ ]]
     then
-        case "$firstpar" in
-            "gui") __errorgui num ;;
-            *) __error num
-        esac
+        if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
+        then
+            __errorgui num
+        else
+            __error num
+        fi
     fi
     if [[ "$yournumber" -ge 1 ]] && [[ "$yournumber" -le $lines ]]
     then
         getline="$yournumber"
     else
-        case "$firstpar" in
-            "gui") __errorgui num ;;
-            *) __error num
-        esac
+        if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
+        then
+            __errorgui num
+        else
+            __error num
+        fi
     fi
     __getquote
     if [[ $firstpar = "loop" ]]
@@ -260,10 +276,6 @@ __configcli() {
     read pathToFile
     if [[ ! -r pathToFile ]]
     then
-        if [[ -z $(cat $config) ]]
-        then
-            rm -f "$config"
-        fi
         __error wrongpath
     fi
     __display chosedivider
@@ -363,8 +375,8 @@ __numbergui() {
 }
 
 __iwantnumgui() {
-#    if [[ $thirdpar ]] && [[ ! $firstpar = "loop" ]] # experimental, not tested
-    if [[ $thirdpar ]]
+    if [[ $thirdpar ]] && [[ ! $firstpar = "loop" ]] # experimental, not tested
+#    if [[ $thirdpar ]]
     then
         yournumber=$thirdpar
     else
@@ -388,7 +400,7 @@ __loop() {
     do
     case $secpar in
         "random") __randomcli ;;
-        "num") __numbercli ;;
+        "num") __numbercli ;; # todo poprawić, przy błędnej liczbie w loop powinno ponownie pytać
         "int") __interactivecli ;;
 #        "gui") __loopgui ;; # todo
         *) exit 1
@@ -399,7 +411,7 @@ __loop() {
 __loopgui() {
     echo "guiloop"
     case $thirdpar in
-        "random") __randomgui ;; # zamknięcie isexit, warunek wyjścia
+        "random") __randomgui ;; # zamknięcie isclosed, warunek wyjścia
         "num") __numbergui ;; # poprawić, w loopie nie może brać 2 parametru lub z 3 przy interactivegui, musi zawsze pytać
         *) __interactivegui
     esac
