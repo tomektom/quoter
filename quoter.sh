@@ -97,6 +97,7 @@ __setlang() {
 ###################################################################
 
 __firstrun() {
+#    echo "firstrun"
     __help
     touch "$config"
     __display first
@@ -108,6 +109,7 @@ __firstrun() {
 }
 
 __firstrungui() {
+#    echo "firstrungui"
     __displaygui first
     __iscancelled
     case "$choice" in
@@ -118,6 +120,7 @@ __firstrungui() {
 }
 
 __default() {
+#    echo "default"
     rm -f "$config"
     touch "$config"
     echo "fileQuotes=$dir/quotes.csv" >> "$config"
@@ -130,6 +133,7 @@ __default() {
 }
 
 __configcheck() {
+#    echo "configcheck"
     if [[ ! -e "$config" ]]
     then
         if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
@@ -140,7 +144,7 @@ __configcheck() {
         fi
     else
         source "$config"
-        if [[ ! -r pathToFile ]]
+        if [[ -r $pathToFile ]]
         then
             if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
             then
@@ -154,6 +158,7 @@ __configcheck() {
 }
 
 __configchanger() {
+#    echo "configchanger"
     rm -f "$config"
     touch "$config"
     echo "fileQuotes=$pathToFile" >> "$config"
@@ -178,19 +183,19 @@ __display() {
 
 __displaygui() {
     case "$1" in
-        "interactive") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$configChoice") ;;
-        "first") choice=$(kdialog --menu "$firstRunGUI" "default" "$choiceDefault" "custom" "$choiceConfiguration") ;;
-        "chosepath") pathToFile=$(kdialog --title "$chosePathGUI" --getopenfilename "$HOME") ;;
-        "chosedivider") customDivider=$(kdialog --title "$configurationTextTitle" --inputbox "$choseDivider" "") ;;
-        "configchanged") kdialog --title "$quoterTitle" --msgbox "$configChanged" ; exit 0 ;;
-        "iwantnum") yournumber=$(kdialog --title "$quoteChoser" --inputbox "$iWantNumber $lines:" "1") ;;
-        *) kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displayTitle"
+        "interactive") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$configChoice") ; button=$? ;;
+        "first") choice=$(kdialog --menu "$firstRunGUI" "default" "$choiceDefault" "custom" "$choiceConfiguration") ; button=$? ;;
+        "chosepath") pathToFile=$(kdialog --title "$chosePathGUI" --getopenfilename "$HOME") ; button=$? ;;
+        "chosedivider") customDivider=$(kdialog --title "$configurationTextTitle" --inputbox "$choseDivider" "") ; button=$? ;;
+        "configchanged") kdialog --title "$quoterTitle" --msgbox "$configChanged" ; button=$? ; exit 0 ;;
+        "iwantnum") yournumber=$(kdialog --title "$quoteChoser" --inputbox "$iWantNumber $lines:" "1") ; button=$? ;;
+        *) kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displayTitle" ; button=$?
     esac
 }
 
 __error() {
     case "$1" in
-        "num") echo -e "$numerr: $secpar" ;;
+        "num") echo -e "$numerr: $yournumber" ;;
         "null") echo -e "$null" ;;
         "wrongpath") echo "$wrongPathError" ;;
         *) echo -e "$unknown"
@@ -200,7 +205,7 @@ __error() {
 
 __errorgui() {
     case "$1" in
-        "num") kdialog --title "$quoterTitle" --error "$numerr: $secpar" ;;
+        "num") kdialog --title "$quoterTitle" --error "$numerr: $yournumber" ;;
         "null") kdialog --title "$quoterTitle" --error "$null" ;;
         "cancel") kdialog --title "$quoterTitle" --error "$cancelled" ;;
         *) kdialog --title "$quoterTitle" --error "$unknown"
@@ -218,12 +223,14 @@ __help() {
 
 # quote picker
 __getquote() {
+#    echo "getquote"
     line=$(sed -n "$getline p" "$fileQuotes")
     author=$(echo "$line" | cut -f1 -d "$divider")
     quote=$(echo "$line" | cut -f2 -d "$divider")
 }
 
 __number() {
+#    echo "number"
     if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
     then
         __iwantnumgui
@@ -258,11 +265,13 @@ __number() {
 }
 
 __day() {
+#    echo "day"
     getline=$(date +%j)
     __getquote
 }
 
 __random() {
+#    echo "random"
     getline=$((1 + "$RANDOM" % "$lines"))
     __getquote
 }
@@ -272,6 +281,7 @@ __random() {
 ###################################################################
 
 __configcli() {
+#    echo "configcli"
     __display chosepath
     read pathToFile
     if [[ ! -r pathToFile ]]
@@ -285,18 +295,21 @@ __configcli() {
 }
 
 __randomcli() {
+#    echo "randomcli"
     __random
     __display
     __isloop
 }
 
 __numbercli() {
+    echo "numbercli"
     __number
     __display
     __isloop
 }
 
 __iwantnumcli() {
+#    echo "iwantnumcli"
     if [[ ! $yournumber ]]
     then
         __display iwantnum
@@ -305,11 +318,13 @@ __iwantnumcli() {
 }
 
 __daycli() {
+#    echo "daycli"
     __day
     __display
 }
 
 __interactivecli() {
+#    echo "interactivecli"
     __display interactive
     read answer
     case $answer in
@@ -325,14 +340,8 @@ __interactivecli() {
 # gui functions
 ###################################################################
 
-__iscancelled() {
-    if [[ $? = 1 ]]
-    then
-        __errorgui cancel
-    fi
-}
-
 __gui() {
+#    echo "gui"
     case "$secpar" in
         "config") __configui ;;
         "day") __daygui ;;
@@ -343,15 +352,17 @@ __gui() {
 }
 
 __configui() {
+#    echo "configui"
     __displaygui chosepath
-    __iscancelled
+    __iscancelled cancel
     __displaygui chosedivider
-    __iscancelled
+    __iscancelled cancel
     __configchanger
     __displaygui configchanged
 }
 
 __interactivegui() {
+#    echo "interactivegui"
     __displaygui interactive
     case $answer in
         "1") __random ;;
@@ -361,20 +372,25 @@ __interactivegui() {
         *) exit 0
     esac
     __displaygui
+    __isclosed
 }
 
 __randomgui() {
+#    echo "randomgui"
     __random
     __displaygui
-    echo "poprzedni parametr: $?" # todo uwzględnić x w okienkach
+    __isclosed
 }
 
 __numbergui() {
+#    echo "numbergui"
     __number
     __displaygui
+    __isclosed
 }
 
 __iwantnumgui() {
+#    echo "iwantnumgui"
     if [[ $thirdpar ]] && [[ ! $firstpar = "loop" ]] # experimental, not tested
 #    if [[ $thirdpar ]]
     then
@@ -386,35 +402,64 @@ __iwantnumgui() {
 }
 
 __daygui() {
+#    echo "daygui"
     __day
     __displaygui
+    __isclosed
 }
 
 ###################################################################
-# test
+# button checkers
 ###################################################################
 
-# todo pododawać 
+__iscancelled() {
+#    echo "iscancelled"
+    if [[ $button = 1 ]]
+    then
+        case $1 in
+            "cancel") __errorgui cancel ;;
+            *) exit 0
+        esac
+    fi
+}
+
+__isclosed() {
+#    echo "isclosed"
+    if [[ $button = 1 ]] || [[ $button = 2 ]]
+    then
+        exit 0
+    fi
+}
+
+
+###################################################################
+# loop functions
+###################################################################
+
 __loop() {
+#    echo "loop"
     while [ 0 = 0 ]
     do
     case $secpar in
         "random") __randomcli ;;
-        "num") __numbercli ;; # todo poprawić, przy błędnej liczbie w loop powinno ponownie pytać
+        "num") __numbercli ;;
         "int") __interactivecli ;;
-#        "gui") __loopgui ;; # todo
+        "gui") __loopgui ;;
         *) exit 1
     esac
     done
 }
 
 __loopgui() {
-    echo "guiloop"
+#    echo "loopgui"
+    while [ 0 = 0 ]
+    do
     case $thirdpar in
-        "random") __randomgui ;; # zamknięcie isclosed, warunek wyjścia
-        "num") __numbergui ;; # poprawić, w loopie nie może brać 2 parametru lub z 3 przy interactivegui, musi zawsze pytać
+        "random") __randomgui ;;
+        "num") __numbergui ;;
         *) __interactivegui
     esac
+    done
 }
 
 __isloop() {
@@ -424,19 +469,10 @@ __isloop() {
         exit 0
     else
         read x
-        if [[ $x = "q" ]]
+        if [[ $x = "q" ]] || [[ $x = "quit" ]] || [[ $x = "exit" ]]
         then
             exit 0
         fi
-    fi
-}
-
-# todo dodać, sprawdzajka czy kliknięto x
-__isclosed() {
-    echo "isexit"
-    if [[ $? = 1 ]] || [[ $? = 2 ]]
-    then
-        exit 0
     fi
 }
 
@@ -467,14 +503,11 @@ esac
 
 # todo add alias .bashrc/.zshrc
 # todo inne gui jeśli nie ma kdialog: zenity, yad
-# sprawdzenie zaimportowanego configu w __configcheck
 
 # todo add desktop file, notatki:
 # template="$dir/template.desktop"
 # robienie rzeczy
 # cp "$dir/quoter.desktop" "$HOME/.local/share/applications/"
-
-# todo loop dla gui, gui random, random i interactive
 
 # todo dla loop gui sprawdzanie czy player jest odtwarzany – może osobna komenda, wygoda przy aplikacjach typu ktimer
 # notatki:
