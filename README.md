@@ -10,6 +10,7 @@ Simple inspirational quotes. Usage:
    quoter int                                              - interactive mode
    quoter loop [ random | num | int ]                      - quoter in loop
    quoter gui [ random | day | num [ <int> ] | config ]    - gui (with kdialog)
+   quoter loop gui [ num | random ]                        - gui in loop
 You can use custom file witch quotes with pattern `author(divider)quote)`, example:
 René Descartes;Cogito ergo sum
 ```

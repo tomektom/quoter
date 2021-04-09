@@ -10,6 +10,7 @@
 #eng:   quoter int                                              - interactive mode
 #eng:   quoter loop [ random | num | int ]                      - quoter in loop
 #eng:   quoter gui [ random | day | num [ <int> ] | config ]    - gui (with kdialog)
+#eng:   quoter loop gui [ num | random ]                        - gui in loop
 #eng: You can use custom file witch quotes with pattern `author(divider)quote)`, example:
 #eng: René Descartes;Cogito ergo sum
 
@@ -21,8 +22,9 @@
 #pl:    quoter num [ <int> ]                                    - wyświetl cytat z podanej linii
 #pl:    quoter config                                           - konfiguracja
 #pl:    quoter int                                              - tryb interaktywny
-#pl:    quoter loop random | num | int ]                        - quoter w pętli
-#pl:    quoter gui [ random | day | num [ <int> ] | config ]    - gui (z wykorzystaniem kdialog) 
+#pl:    quoter loop [ random | num | int ]                      - quoter w pętli
+#pl:    quoter gui [ random | day | num [ <int> ] | config ]    - gui (z wykorzystaniem kdialog)
+#pl:    quoter loop gui [ num | random ]                        - gui w pętli
 #pl: Możesz wykorzystać własny plik z cytatami według wzoru 'autor(rozdzielacz)cytat', przykład:
 #pl: René Descartes;Cogito ergo sum
 
@@ -99,7 +101,6 @@ __setlang() {
 __firstrun() {
 #    echo "firstrun"
     __help
-    touch "$config"
     __display first
     read x
     case "$x" in
@@ -302,7 +303,7 @@ __randomcli() {
 }
 
 __numbercli() {
-    echo "numbercli"
+#    echo "numbercli"
     __number
     __display
     __isloop
