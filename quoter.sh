@@ -478,6 +478,52 @@ __isloop() {
 }
 
 ###################################################################
+# special functions
+###################################################################
+
+# checking if video is played in active firefox tab, useful when added to ktimer or similar  app
+__isvideoplayed() {
+    if ! command -v pacmd &> /dev/null && ! command -v xdotool &> /dev/null
+    then
+        exit 0
+    fi
+    isplayingcount=$(pacmd list-sink-inputs | grep -i -c "state: running")
+    ispaused=$(pacmd list-sink-inputs | grep -i "state: corked")
+    if [[ $isplayingcount ]]
+    then
+        if [[ $isplayingcount -ge 2 ]] || [[ $ispaused ]]
+        then
+            exit 0
+        else
+            playerapp=$(pacmd list-sink-inputs | grep -i "application.process.binary" | cut -f2 -d '"')
+            if [[ "$playerapp" = "vlc" ]] || [[ $playerapp = "vivaldi-bin" ]]
+            then
+                exit 0
+            elif [[ "$playerapp" = "firefox" ]]
+            then
+                firefoxpid=$(pacmd list-sink-inputs | grep -i "application.process.id" | cut -f2 -d '"')
+                
+                if ! command -v qdbus &> /dev/null
+                then
+                    playingtitle=$(gdbus introspect --session --dest org.mpris.MediaPlayer2.firefox.instance"$firefoxpid" --object-path /org/mpris/MediaPlayer2 | grep title | cut -f3 -d "<" | cut -f1 -d ">")
+                    playingtitle=${playingtitle%?}
+                else
+                    playingtitle=$(qdbus org.mpris.MediaPlayer2.firefox.instance"$firefoxpid" /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Metadata | grep "title" | cut -f3 -d ":")
+                fi
+                playingtitle=${playingtitle#?}
+                playingtitle=$(echo "$playingtitle" | tr -s " ")
+                currentwindow=$(xdotool getactivewindow getwindowname)
+                comparethis=$(xdotool getactivewindow getwindowname | grep "$playingtitle")
+                if [[ "$comparethis" = "$currentwindow" ]]
+                then
+                    exit 0
+                fi
+            fi
+        fi
+    fi
+}
+
+###################################################################
 # end functions, main program
 ###################################################################
 
@@ -487,6 +533,7 @@ thirdpar="$3"
 dir="$( cd "$( dirname "$0" )" &> /dev/null && pwd )"  # full path to directory where is placed this script
 config="$dir/quoter.conf"
 
+__isvideoplayed
 __setlang
 __configcheck
 
@@ -509,29 +556,3 @@ esac
 # template="$dir/template.desktop"
 # robienie rzeczy
 # cp "$dir/quoter.desktop" "$HOME/.local/share/applications/"
-
-# todo dla loop gui sprawdzanie czy player jest odtwarzany – może osobna komenda, wygoda przy aplikacjach typu ktimer
-# notatki:
-# pacmd list-sink-inputs
-# jak wykryje to patrz parametr "state" – running odtwarzane, corked zapauzowane
-# filtrowanie po "application.process.binary" – żeby sprawdzić czy wideo czy muzyka?
-
-# sprawdzenie czy player jest na full screen w przeglądarce
-# qdbus org.kde.plasma.browser_integration /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Fullscreen
-# czy się odtwarza 
-# qdbus org.kde.plasma.browser_integration /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlaybackStatus
-# jeśli tak to wziąć tytuł aktywnego okna
-# xdotool getactivewindow getwindowname
-# i przefiltrować
-
-# state=$(pacmd list-sink-inputs| grep -i "state: running")
-# if [[ $state ]]
-# then
-#    sprawdzenie application.process.binary
-#    jeśli proces należy do vlc (lub innego video playera) to zamknąć, a jeśli do przeglądarki to dalej sprawdzić tytuł okna
-#    xdotool getactivewindow getwindowname
-#    stąd wziąć nazwę karty w której coś jest odtwarzane
-#    qdbus org.mpris.MediaPlayer2.firefox.instance159357 /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Metadata
-#    i porównać
-#    exit
-# fi
