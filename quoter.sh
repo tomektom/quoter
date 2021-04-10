@@ -512,7 +512,12 @@ __isvideoplayed() {
             playerapp=$(pacmd list-sink-inputs | grep -i "application.process.binary" | cut -f2 -d '"')
             if [[ "$playerapp" = "vlc" ]] || [[ $playerapp = "vivaldi-bin" ]]
             then
-                exit 0
+                windowpid=$(xdotool getactivewindow getwindowpid)
+                windowpidname=$(ps -p "$windowpid" -o comm=)
+                if [[ $windowpidname = $playerapp ]]
+                then
+                    exit 0
+                fi
             elif [[ "$playerapp" = "firefox" ]]
             then
                 firefoxpid=$(pacmd list-sink-inputs | grep -i "application.process.id" | cut -f2 -d '"')
@@ -583,8 +588,6 @@ case "$firstpar" in
     *) __randomcli
 esac
 
-
-# todo add alias .bashrc/.zshrc
 
 # todo add desktop file, notatki:
 # template="$workdir/template.desktop"
