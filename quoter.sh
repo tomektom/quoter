@@ -59,7 +59,7 @@ __lang_pl() {
     configChoice="Skonfiguruj Quoter"
     cancelled="Anulowano operację"
     wrongPathError="Podano błędną ścieżkę"
-    
+    aliasQuestion="Czy dodać alias do .bashrc i .zshrc?"    
 }
 __lang_eng() {
     quoterTitle="Quoter"
@@ -87,6 +87,7 @@ __lang_eng() {
     configChoice="Configure Quoter"
     cancelled="Operation cancelled"
     wrongPathError="Entered wrong path"
+    aliasQuestion="Do you want alias in .bashrc and .zshrc?"
 }
 __setlang() {
     case "$LANG" in
@@ -124,7 +125,7 @@ __default() {
 #    echo "default"
     rm -f "$config"
     touch "$config"
-    echo "fileQuotes=$dir/quotes.csv" >> "$config"
+    echo "fileQuotes=$workdir/quotes.csv" >> "$config"
     echo "divider=@" >> "$config"
     case $1 in
         "1") __displaygui configchanged ;;
@@ -172,6 +173,7 @@ __configchanger() {
 
 __display() {
     case "$1" in
+        "aliasquestion") echo "$aliasQuestion" ;;
         "interactive") echo -e "$question" ;;
         "first") echo -e "\n$firstRun" ;;
         "chosepath") echo "$chosePath" ;;
@@ -184,6 +186,7 @@ __display() {
 
 __displaygui() {
     case "$1" in
+        "aliasquestion") kdialog --yesno "$aliasQuestion" ; button=$? ;; 
         "interactive") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$configChoice") ; button=$? ;;
         "first") choice=$(kdialog --menu "$firstRunGUI" "default" "$choiceDefault" "custom" "$choiceConfiguration") ; button=$? ;;
         "chosepath") pathToFile=$(kdialog --title "$chosePathGUI" --getopenfilename "$HOME") ; button=$? ;;
@@ -292,6 +295,12 @@ __configcli() {
     __display chosedivider
     read customDivider
     __configchanger
+    __display aliasquestion
+    if [[ $answer = y ]]
+    then
+        __addalias
+    fi
+    # todo desktop file
     __display configchanged
 }
 
@@ -359,6 +368,12 @@ __configui() {
     __displaygui chosedivider
     __iscancelled cancel
     __configchanger
+    __displaygui aliasquestion
+    if [[ $button = 0 ]]
+    then
+        __addalias
+    fi
+    # todo desktop file
     __displaygui configchanged
 }
 
@@ -392,8 +407,7 @@ __numbergui() {
 
 __iwantnumgui() {
 #    echo "iwantnumgui"
-    if [[ $thirdpar ]] && [[ ! $firstpar = "loop" ]] # experimental, not tested
-#    if [[ $thirdpar ]]
+    if [[ $thirdpar ]] && [[ ! $firstpar = "loop" ]]
     then
         yournumber=$thirdpar
     else
@@ -483,7 +497,7 @@ __isloop() {
 
 # checking if video is played in active firefox tab, useful when added to ktimer or similar  app
 __isvideoplayed() {
-    if ! command -v pacmd &> /dev/null && ! command -v xdotool &> /dev/null
+    if ! command -v pacmd &> /dev/null && ! command -v xdotool &> /dev/null # checking if commands exists
     then
         exit 0
     fi
@@ -506,11 +520,11 @@ __isvideoplayed() {
                 if ! command -v qdbus &> /dev/null
                 then
                     playingtitle=$(gdbus introspect --session --dest org.mpris.MediaPlayer2.firefox.instance"$firefoxpid" --object-path /org/mpris/MediaPlayer2 | grep title | cut -f3 -d "<" | cut -f1 -d ">")
-                    playingtitle=${playingtitle%?}
+                    playingtitle=${playingtitle%?} # remove last character
                 else
                     playingtitle=$(qdbus org.mpris.MediaPlayer2.firefox.instance"$firefoxpid" /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Metadata | grep "title" | cut -f3 -d ":")
                 fi
-                playingtitle=${playingtitle#?}
+                playingtitle=${playingtitle#?} # remove first character
                 playingtitle=$(echo "$playingtitle" | tr -s " ")
                 currentwindow=$(xdotool getactivewindow getwindowname)
                 comparethis=$(xdotool getactivewindow getwindowname | grep "$playingtitle")
@@ -523,6 +537,27 @@ __isvideoplayed() {
     fi
 }
 
+# add aliases to .zshrc and .bashrc
+__addalias() {
+    youralias="alias quoter='bash $workdir/quoter.sh'"
+    if [[ -e $HOME/.zshrc ]]
+    then
+        x=$(grep "$youralias" "$HOME"/.zshrc)
+        if [[ ! $x ]]
+        then
+            echo "$youralias" >> "$HOME"/.zshrc
+        fi
+    fi
+    if [[ -e $HOME/.bashrc ]]
+    then
+        x=$(grep "$youralias" "$HOME"/.bashrc)
+        if [[ ! $x ]]
+        then
+            echo "$youralias" >> "$HOME"/.bashrc
+        fi
+    fi
+}
+
 ###################################################################
 # end functions, main program
 ###################################################################
@@ -530,8 +565,8 @@ __isvideoplayed() {
 firstpar="$1"
 secpar="$2"
 thirdpar="$3"
-dir="$( cd "$( dirname "$0" )" &> /dev/null && pwd )"  # full path to directory where is placed this script
-config="$dir/quoter.conf"
+workdir="$( cd "$( dirname "$0" )" &> /dev/null && pwd )"  # full path to directory where is placed this script
+config="$workdir/quoter.conf"
 
 __isvideoplayed
 __setlang
@@ -550,9 +585,10 @@ esac
 
 
 # todo add alias .bashrc/.zshrc
-# todo inne gui jeśli nie ma kdialog: zenity, yad
 
 # todo add desktop file, notatki:
-# template="$dir/template.desktop"
+# template="$workdir/template.desktop"
 # robienie rzeczy
-# cp "$dir/quoter.desktop" "$HOME/.local/share/applications/"
+# cp "$workdir/quoter.desktop" "$HOME/.local/share/applications/"
+
+# todo jak w bash-insulter, cytaty przy błędnym poleceniu, raczej jako osobny plik
