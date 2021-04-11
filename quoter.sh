@@ -36,7 +36,6 @@
 __lang_pl() {
     quoterTitle="Quoter"
     langHelp="#pl:"
-    displayTitle="Twój cytat"
     unknown="Spotkano nieznany błąd"
     numerr="Błędna liczba"
     null="Nie podano parametru"
@@ -59,12 +58,19 @@ __lang_pl() {
     configChoice="Skonfiguruj Quoter"
     cancelled="Anulowano operację"
     wrongPathError="Podano błędną ścieżkę"
-    aliasQuestion="Czy dodać alias do .bashrc i .zshrc?"    
+    aliasQuestion="Czy dodać alias do .bashrc i .zshrc?"
+    desktopFileAsk="Czy chcesz utworzyć plik .desktop dla Quoter?"
+    desktopFileAskList="Jaką komendę ma wywoływać plik quoter.desktop?\n 1) quoter gui\n 2) quoter gui random\n 3) quoter gui num\n 4) quoter gui day\n 5) quoter loop gui\n 6) quoter loop gui random\n 7) quoter loop gui num"
+    whereGoDesktop="Gdzie umieścić plik?\n 1) na pulpicie\n 2) w menu aplikacji\n 3) w obu miejscach"
+    desktopFileAskGUI="Jaką komendę ma wywoływać plik quoter.desktop?"
+    whereGoDesktopGUI="Gdzie umieścić plik?"
+    desktopFolder="Na pulpicie"
+    menuApp="W menu aplikacji"
+    bothGo="W obu miejscach"
 }
 __lang_eng() {
     quoterTitle="Quoter"
     langHelp="#eng:"
-    displayTitle="Your quote"
     unknown="Unknown error"
     numerr="Wrong number"
     null="Missing parameter"
@@ -88,6 +94,14 @@ __lang_eng() {
     cancelled="Operation cancelled"
     wrongPathError="Entered wrong path"
     aliasQuestion="Do you want alias in .bashrc and .zshrc?"
+    desktopFileAsk="Do you want create .desktop file for Quoter?"
+    desktopFileAskList="Which command should invoke quoter.desktop?\n 1) quoter gui\n 2) quoter gui random\n 3) quoter gui num\n 4) quoter gui day\n 5) quoter loop gui\n 6) quoter loop gui random\n 7) quoter loop gui num"
+    whereGoDesktop="Where place this file?\n 1) on desktop\n 2) in app menu\n 3) in both places"
+    desktopFileAskGUI="Which command should invoke quoter.desktop?"
+    whereGoDesktopGUI="Where place this file?"
+    desktopFolder="On desktop"
+    menuApp="In app menu"
+    bothGo="In both places"
 }
 __setlang() {
     case "$LANG" in
@@ -173,7 +187,10 @@ __configchanger() {
 
 __display() {
     case "$1" in
-        "aliasquestion") echo "$aliasQuestion" ;;
+        "desktopfileask") echo -e "$desktopFileAsk" ;;
+        "desktopfile") echo -e "$desktopFileAskList" ;;
+        "wheregodesktopfile") echo -e "$whereGoDesktop" ;;
+        "aliasquestion") echo -e "$aliasQuestion" ;;
         "interactive") echo -e "$question" ;;
         "first") echo -e "\n$firstRun" ;;
         "chosepath") echo "$chosePath" ;;
@@ -186,6 +203,8 @@ __display() {
 
 __displaygui() {
     case "$1" in
+        "wheregodesktopfile") answer2=$(kdialog --title "$quoterTitle" --menu "$whereGoDesktopGUI" 1 "$desktopFolder" 2 "$menuApp" 3 "$bothGo") ; button=$? ;;
+        "desktopfile") answer1=$(kdialog --title "$quoterTitle" --menu "$desktopFileAskGUI" 1 "quoter gui" 2 "quoter gui random" 3 "quoter gui num" 4 "quoter gui day" 5 "quoter loop gui" 6 "quoter loop gui random" 7 "quoter loop gui num") ; button=$? ;;
         "aliasquestion") kdialog --yesno "$aliasQuestion" ; button=$? ;; 
         "interactive") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$configChoice") ; button=$? ;;
         "first") choice=$(kdialog --menu "$firstRunGUI" "default" "$choiceDefault" "custom" "$choiceConfiguration") ; button=$? ;;
@@ -193,7 +212,7 @@ __displaygui() {
         "chosedivider") customDivider=$(kdialog --title "$configurationTextTitle" --inputbox "$choseDivider" "") ; button=$? ;;
         "configchanged") kdialog --title "$quoterTitle" --msgbox "$configChanged" ; button=$? ; exit 0 ;;
         "iwantnum") yournumber=$(kdialog --title "$quoteChoser" --inputbox "$iWantNumber $lines:" "1") ; button=$? ;;
-        *) kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$displayTitle" ; button=$?
+        *) kdialog --msgbox "<br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" --title "$quoterTitle" ; button=$?
     esac
 }
 
@@ -288,7 +307,7 @@ __configcli() {
 #    echo "configcli"
     __display chosepath
     read pathToFile
-    if [[ ! -r pathToFile ]]
+    if [[ -r pathToFile ]]
     then
         __error wrongpath
     fi
@@ -296,11 +315,24 @@ __configcli() {
     read customDivider
     __configchanger
     __display aliasquestion
-    if [[ $answer = y ]]
+    read -p "[y/N]: " answer
+    if [[ $answer = "y" ]]
     then
         __addalias
     fi
-    # todo desktop file
+    __display desktopfileask
+    read -p "[y/N]: " answer
+    if [[ $answer = "y" ]]
+    then
+        __display desktopfile
+        read answer1
+        if [[ $answer1 -ge 1 ]] && [[ $answer1 -le 7 ]]
+        then
+            __display wheregodesktopfile
+            read answer2
+            __createdesktopfile
+        fi
+    fi
     __display configchanged
 }
 
@@ -373,7 +405,12 @@ __configui() {
     then
         __addalias
     fi
-    # todo desktop file
+    __displaygui desktopfile
+    if [[ $button = 0 ]]
+    then
+        __displaygui wheregodesktopfile
+        __createdesktopfile
+    fi
     __displaygui configchanged
 }
 
@@ -563,6 +600,27 @@ __addalias() {
     fi
 }
 
+__createdesktopfile() {
+    template="$workdir/template.desktop"
+    desktopfile="$workdir/quoter.desktop"
+    cp -f "$template" "$desktopfile"
+    case $answer1 in
+        "1") echo "Exec=$workdir/quoter.sh gui" >> $desktopfile ;;
+        "2") echo "Exec=$workdir/quoter.sh gui random" >> $desktopfile ;;
+        "3") echo "Exec=$workdir/quoter.sh gui num" >> $desktopfile ;;
+        "4") echo "Exec=$workdir/quoter.sh gui day" >> $desktopfile ;;
+        "5") echo "Exec=$workdir/quoter.sh loop gui" >> $desktopfile ;;
+        "6") echo "Exec=$workdir/quoter.sh loop gui random" >> $desktopfile ;;
+        "7") echo "Exec=$workdir/quoter.sh loop gui num" >> $desktopfile
+    esac
+    test -f ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs && source ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs # get user xdg directories
+    case $answer2 in
+        "1") cp -f -s "$desktopfile" "${XDG_DESKTOP_DIR:-$HOME/Desktop}" ;;
+        "2") cp -f -s "$desktopfile" "$HOME/.local/share/applications/" ;;
+        "3") cp -f -s "$desktopfile" "${XDG_DESKTOP_DIR:-$HOME/Desktop}" ; cp -f -s "$desktopfile" "$HOME/.local/share/applications/"
+    esac           
+}
+
 ###################################################################
 # end functions, main program
 ###################################################################
@@ -587,11 +645,5 @@ case "$firstpar" in
     "loop") __loop ;;
     *) __randomcli
 esac
-
-
-# todo add desktop file, notatki:
-# template="$workdir/template.desktop"
-# robienie rzeczy
-# cp "$workdir/quoter.desktop" "$HOME/.local/share/applications/"
 
 # todo jak w bash-insulter, cytaty przy błędnym poleceniu, raczej jako osobny plik
