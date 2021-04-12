@@ -11,7 +11,7 @@
 #eng:   quoter loop [ random | num | int ]                      - quoter in loop
 #eng:   quoter gui [ random | day | num [ <int> ] | config ]    - gui (with kdialog)
 #eng:   quoter loop gui [ num | random ]                        - gui in loop
-#eng: You can use custom file witch quotes with pattern `author(divider)quote)`, example:
+#eng: You can use custom file witch quotes with pattern `author(divider)quote`, example:
 #eng: René Descartes;Cogito ergo sum
 
 # Polski help
@@ -252,7 +252,7 @@ __getquote() {
     quote=$(echo "$line" | cut -f2 -d "$divider")
 }
 
-__number() {
+__number() { # todo poprawić bo zawsze pyta przy cli
 #    echo "number"
     if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
     then
@@ -289,12 +289,38 @@ __number() {
 
 __day() {
 #    echo "day"
-    getline=$(date +%j)
+    numberofday=$(date +%j)
+    if [[ $(($(date +%Y)%4)) = 0 ]]
+    then
+        daysinyear=366
+    else
+        daysinyear=365
+    fi
+    if [[ "$lines" -gt "$daysinyear" ]]
+    then
+        x="$numberofday"
+        i=1
+        while [[ $x -lt $((lines-daysinyear)) ]]
+        do
+            x=$((x+daysinyear))
+            i=$((i+1))
+        done
+        if [[ $i -ge 2 ]]
+        then
+            param=$((0 + "$RANDOM" % "$i"))
+        else
+            param=0
+        fi
+        getline=$((param*daysinyear+numberofday))
+    else
+        getline=$numberofday
+    fi  
     __getquote
 }
 
 __random() {
 #    echo "random"
+    local lines=$((lines+1))
     getline=$((1 + "$RANDOM" % "$lines"))
     __getquote
 }
@@ -361,6 +387,10 @@ __iwantnumcli() {
 
 __daycli() {
 #    echo "daycli"
+    if [[ $(date +%j) -gt $lines ]]
+    then
+        __error
+    fi
     __day
     __display
 }
@@ -455,6 +485,10 @@ __iwantnumgui() {
 
 __daygui() {
 #    echo "daygui"
+    if [[ $(date +%j) -gt $lines ]]
+    then
+        __errorgui
+    fi
     __day
     __displaygui
     __isclosed
@@ -647,3 +681,4 @@ case "$firstpar" in
 esac
 
 # todo jak w bash-insulter, cytaty przy błędnym poleceniu, raczej jako osobny plik
+
