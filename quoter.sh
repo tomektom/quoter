@@ -252,34 +252,9 @@ __getquote() {
     quote=$(echo "$line" | cut -f2 -d "$divider")
 }
 
-__number() { # todo poprawić bo zawsze pyta przy cli
+__number() {
 #    echo "number"
-    if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
-    then
-        __iwantnumgui
-    else
-        __iwantnumcli
-    fi
-    if [[ ! "$yournumber" =~ ^[0-9]+$ ]]
-    then
-        if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
-        then
-            __errorgui num
-        else
-            __error num
-        fi
-    fi
-    if [[ "$yournumber" -ge 1 ]] && [[ "$yournumber" -le $lines ]]
-    then
-        getline="$yournumber"
-    else
-        if [[ $firstpar = "gui" ]] || [[ $secpar = "gui" ]]
-        then
-            __errorgui num
-        else
-            __error num
-        fi
-    fi
+    getline="$yournumber"
     __getquote
     if [[ $firstpar = "loop" ]]
     then
@@ -371,6 +346,22 @@ __randomcli() {
 
 __numbercli() {
 #    echo "numbercli"
+    if [[ $firstpar = "loop" ]]
+    then
+        __iwantnumcli
+    elif [[ ! $secpar ]]
+    then
+        __iwantnumcli
+    else
+        yournumber="$secpar"
+    fi
+    if [[ ! "$yournumber" =~ ^[0-9]+$ ]]
+    then
+        __error num
+    elif [[ "$yournumber" -lt 1 ]] || [[ "$yournumber" -gt $lines ]]
+    then
+        __error num
+    fi
     __number
     __display
     __isloop
@@ -467,13 +458,6 @@ __randomgui() {
 
 __numbergui() {
 #    echo "numbergui"
-    __number
-    __displaygui
-    __isclosed
-}
-
-__iwantnumgui() {
-#    echo "iwantnumgui"
     if [[ $thirdpar ]] && [[ ! $firstpar = "loop" ]]
     then
         yournumber=$thirdpar
@@ -481,7 +465,28 @@ __iwantnumgui() {
         __displaygui iwantnum
         __iscancelled
     fi
+    if [[ ! "$yournumber" =~ ^[0-9]+$ ]]
+    then
+        __errorgui num
+    elif [[ "$yournumber" -lt 1 ]] || [[ "$yournumber" -gt $lines ]]
+    then
+        __errorgui num
+    fi
+    __number
+    __displaygui
+    __isclosed
 }
+
+#__iwantnumgui() {
+#    echo "iwantnumgui"
+#    if [[ $thirdpar ]] && [[ ! $firstpar = "loop" ]]
+#    then
+#        yournumber=$thirdpar
+#    else
+#        __displaygui iwantnum
+#        __iscancelled
+#    fi
+#}
 
 __daygui() {
 #    echo "daygui"
