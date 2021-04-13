@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# import config
+workdir="$( cd "$( dirname "$0" )" &> /dev/null && pwd )"
+source "$workdir/quoter.conf"
+
+# random quote picker
+__pickquote() {
+    lines=$(wc -l < "$fileQuotes")
+    RANDOM=$(od -vAn -N4 -tu < /dev/urandom)
+    getline=$((1 + $RANDOM % $lines))
+    line=$(sed -n "$getline p" "$fileQuotes")
+    author=$(echo "$line" | cut -f1 -d "$divider")
+    quote=$(echo "$line" | cut -f2 -d "$divider")
+    echo -e "\n$quote\n\n\t\e[1m$author\e[0m\n"
+}
+
+
+function_exists () {
+    declare -f "$1" > /dev/null
+    return $?
+}
+
+# zsh handler
+# checking if handler exist and catching original message
+if function_exists command_not_found_handler; then
+    if ! function_exists orig_command_not_found_handler; then
+        eval "orig_$(declare -f command_not_found_handler)"
+    fi
+else
+    orig_command_not_found_handler () {
+        printf "zsh: command not found: %s\\n" "$1" >&2
+        return 127
+    }
+fi
+
+command_not_found_handler() { 
+    __pickquote
+    # original message
+    orig_command_not_found_handler "$@"
+}
+
+
+# bash handler
+# checking if handler exist and catching original message
+if function_exists command_not_found_handle; then
+    if ! function_exists orig_command_not_found_handle; then
+        eval "orig_$(declare -f command_not_found_handle)"
+    fi
+else
+    orig_command_not_found_handle () {
+        printf "%s: %s: command not found\\n" "$0" "$1" >&2
+        return 127
+    }
+fi
+
+command_not_found_handle() { 
+    __pickquote
+    # original message
+    orig_command_not_found_handler "$@"
+}

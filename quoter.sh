@@ -67,6 +67,7 @@ __lang_pl() {
     desktopFolder="Na pulpicie"
     menuApp="W menu aplikacji"
     bothGo="W obu miejscach"
+    handlerQuestion="Czy dodać handler dla 'command not found'?"
 }
 __lang_eng() {
     quoterTitle="Quoter"
@@ -102,6 +103,7 @@ __lang_eng() {
     desktopFolder="On desktop"
     menuApp="In app menu"
     bothGo="In both places"
+    handlerQuestion="Do you want handler for 'command not found'?"
 }
 __setlang() {
     case "$LANG" in
@@ -187,6 +189,7 @@ __configchanger() {
 
 __display() {
     case "$1" in
+        "handlerquestion") echo "$handlerQuestion" ;;
         "desktopfileask") echo -e "$desktopFileAsk" ;;
         "desktopfile") echo -e "$desktopFileAskList" ;;
         "wheregodesktopfile") echo -e "$whereGoDesktop" ;;
@@ -203,6 +206,7 @@ __display() {
 
 __displaygui() {
     case "$1" in
+        "handlerquestion") kdialog --title "$quoterTitle" --yesno "$handlerQuestion" ; button=$? ;;
         "wheregodesktopfile") answer2=$(kdialog --title "$quoterTitle" --menu "$whereGoDesktopGUI" 1 "$desktopFolder" 2 "$menuApp" 3 "$bothGo") ; button=$? ;;
         "desktopfile") answer1=$(kdialog --title "$quoterTitle" --menu "$desktopFileAskGUI" 1 "quoter gui" 2 "quoter gui random" 3 "quoter gui num" 4 "quoter gui day" 5 "quoter loop gui" 6 "quoter loop gui random" 7 "quoter loop gui num") ; button=$? ;;
         "aliasquestion") kdialog --yesno "$aliasQuestion" ; button=$? ;; 
@@ -315,12 +319,35 @@ __configcli() {
     __display chosedivider
     read customDivider
     __configchanger
-    __display aliasquestion
-    read -p "[y/N]: " answer
-    if [[ $answer = "y" ]]
+    
+    youralias="alias quoter='bash $workdir/quoter.sh'"
+    grep -q "$youralias" "$HOME/.zshrc" &> /dev/null
+    var1=$?
+    grep -q "$youralias" "$HOME/.bashrc" &> /dev/null
+    var2=$?
+    if [[ $var1 -ge 1 ]] || [[ $var2 -ge 1 ]]
     then
-        __addalias
+        __display aliasquestion
+        read -p "[y/N]: " answer
+        if [[ $answer = "y" ]]
+        then
+            __addalias
+        fi
     fi
+    grep -q "$workdir/quoter-handler" "$HOME/.zshrc" &> /dev/null
+    var1=$?
+    grep -q "$workdir/quoter-handler" "$HOME/.bashrc" &> /dev/null
+    var2=$?
+    if [[ $var1 -ge 1 ]] || [[ $var2 -ge 1 ]]
+    then
+        __display handlerquestion
+        read -p "[y/N]: " answer
+        if [[ $answer = "y" ]]
+        then
+            __addhandler
+        fi
+    fi
+    
     __display desktopfileask
     read -p "[y/N]: " answer
     if [[ $answer = "y" ]]
@@ -421,11 +448,33 @@ __configui() {
     __displaygui chosedivider
     __iscancelled cancel
     __configchanger
-    __displaygui aliasquestion
-    if [[ $button = 0 ]]
+    
+    youralias="alias quoter='bash $workdir/quoter.sh'"
+    grep -q "$youralias" "$HOME/.zshrc" &> /dev/null
+    var1=$?
+    grep -q "$youralias" "$HOME/.bashrc" &> /dev/null
+    var2=$?
+    if [[ $var1 -ge 1 ]] || [[ $var2 -ge 1 ]]
     then
-        __addalias
+        __displaygui aliasquestion
+        if [[ $button = 0 ]]
+        then
+            __addalias
+        fi
     fi
+    grep -q "$workdir/quoter-handler" "$HOME/.zshrc" &> /dev/null
+    var1=$?
+    grep -q "$workdir/quoter-handler" "$HOME/.bashrc" &> /dev/null
+    var2=$?
+    if [[ $var1 -ge 1 ]] || [[ $var2 -ge 1 ]]
+    then
+        __displaygui handlerquestion
+        if [[ $button = 0 ]]
+        then
+            __addhandler
+        fi
+    fi
+    
     __displaygui desktopfile
     if [[ $button = 0 ]]
     then
@@ -476,17 +525,6 @@ __numbergui() {
     __displaygui
     __isclosed
 }
-
-#__iwantnumgui() {
-#    echo "iwantnumgui"
-#    if [[ $thirdpar ]] && [[ ! $firstpar = "loop" ]]
-#    then
-#        yournumber=$thirdpar
-#    else
-#        __displaygui iwantnum
-#        __iscancelled
-#    fi
-#}
 
 __daygui() {
 #    echo "daygui"
@@ -620,25 +658,33 @@ __isvideoplayed() {
 
 # add aliases to .zshrc and .bashrc
 __addalias() {
-    youralias="alias quoter='bash $workdir/quoter.sh'"
     if [[ -e $HOME/.zshrc ]]
     then
-        x=$(grep "$youralias" "$HOME"/.zshrc)
-        if [[ ! $x ]]
-        then
-            echo "$youralias" >> "$HOME"/.zshrc
-        fi
+        echo "$youralias" >> "$HOME"/.zshrc
     fi
     if [[ -e $HOME/.bashrc ]]
     then
-        x=$(grep "$youralias" "$HOME"/.bashrc)
-        if [[ ! $x ]]
-        then
-            echo "$youralias" >> "$HOME"/.bashrc
-        fi
+        echo "$youralias" >> "$HOME"/.bashrc
     fi
 }
 
+# add quoter-handler to .zshrc and .bashrc
+__addhandler() {
+    if [[ -e $HOME/.zshrc ]]
+    then
+        echo "if [ -f $workdir/quoter-handler ]; then" >> "$HOME"/.zshrc
+        echo "    . $workdir/quoter-handler" >> "$HOME"/.zshrc
+        echo "fi" >> "$HOME"/.zshrc
+    fi
+    if [[ -e $HOME/.bashrc ]]
+    then
+        echo "if [ -f $workdir/quoter-handler ]; then" >> "$HOME"/.bashrc
+        echo "    . $workdir/quoter-handler" >> "$HOME"/.bashrc
+        echo "fi" >> "$HOME"/.bashrc
+    fi
+}
+
+# creating desktop file
 __createdesktopfile() {
     template="$workdir/template.desktop"
     desktopfile="$workdir/quoter.desktop"
@@ -684,6 +730,3 @@ case "$firstpar" in
     "loop") __loop ;;
     *) __randomcli
 esac
-
-# todo jak w bash-insulter, cytaty przy błędnym poleceniu, raczej jako osobny plik
-

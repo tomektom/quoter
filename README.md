@@ -14,3 +14,5 @@ Simple inspirational quotes. Usage:
 You can use custom file witch quotes with pattern `author(divider)quote`, example:
 René Descartes;Cogito ergo sum
 ```
+
+`quoter-handler.sh` file is highly inspired by [bash-insulter](https://github.com/hkbakke/bash-insulter) and do almost same thing, but instead insult you print you inspirational quote when you write wrong command :) If you want to use it run `quoter config`, you'll be asked for adding it to your .zshrc and .bashrc file.
