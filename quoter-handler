@@ -22,7 +22,6 @@ function_exists () {
 }
 
 # zsh handler
-# checking if handler exist and catching original message
 if function_exists command_not_found_handler; then
     if ! function_exists orig_command_not_found_handler; then
         eval "orig_$(declare -f command_not_found_handler)"
@@ -36,13 +35,11 @@ fi
 
 command_not_found_handler() { 
     __pickquote
-    # original message
     orig_command_not_found_handler "$@"
 }
 
 
 # bash handler
-# checking if handler exist and catching original message
 if function_exists command_not_found_handle; then
     if ! function_exists orig_command_not_found_handle; then
         eval "orig_$(declare -f command_not_found_handle)"
@@ -56,6 +53,5 @@ fi
 
 command_not_found_handle() { 
     __pickquote
-    # original message
     orig_command_not_found_handler "$@"
 }
