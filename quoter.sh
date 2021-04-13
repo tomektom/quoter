@@ -420,7 +420,8 @@ __interactivecli() {
     case $answer in
         "1") __random ;;
         "2") __day ;;
-        "3") __number ;;
+        "3") __iwantnumcli 
+            __number ;;
         "4") exit 0
     esac
     __display
@@ -490,7 +491,8 @@ __interactivegui() {
     case $answer in
         "1") __random ;;
         "2") __day ;;
-        "3") __number ;;
+        "3") __displaygui iwantnum 
+            __number ;;
         "4") __configui ;;
         *) exit 0
     esac
@@ -716,7 +718,7 @@ thirdpar="$3"
 workdir="$( cd "$( dirname "$0" )" &> /dev/null && pwd )"  # full path to directory where is placed this script
 config="$workdir/quoter.conf"
 
-__isvideoplayed
+#__isvideoplayed
 __setlang
 __configcheck
 
