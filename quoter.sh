@@ -716,7 +716,7 @@ thirdpar="$3"
 workdir="$( cd "$( dirname "$0" )" &> /dev/null && pwd )"  # full path to directory where is placed this script
 config="$workdir/quoter.conf"
 
-__isvideoplayed
+#__isvideoplayed
 __setlang
 __configcheck
 
