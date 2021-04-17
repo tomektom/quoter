@@ -8,8 +8,10 @@
 #eng:   quoter num [ <int> ]                                    - display quote from this line
 #eng:   quoter config                                           - configuration
 #eng:   quoter int                                              - interactive mode
+#eng:   quoter walk [ <int> <step> ]                            - walk mode
 #eng:   quoter loop [ random | num | int ]                      - quoter in loop
 #eng:   quoter gui [ random | day | num [ <int> ] | config ]    - gui (with kdialog)
+#eng:   quoter gui walk [ <int> <step> ]                        - walk mode gui
 #eng:   quoter loop gui [ num | random ]                        - gui in loop
 #eng: You can use custom file witch quotes with pattern `author(divider)quote`, example:
 #eng: René Descartes;Cogito ergo sum
@@ -22,8 +24,10 @@
 #pl:    quoter num [ <int> ]                                    - wyświetl cytat z podanej linii
 #pl:    quoter config                                           - konfiguracja
 #pl:    quoter int                                              - tryb interaktywny
+#pl:    quoter walk [ <int> <step> ]                            - tryb spacerowy
 #pl:    quoter loop [ random | num | int ]                      - quoter w pętli
 #pl:    quoter gui [ random | day | num [ <int> ] | config ]    - gui (z wykorzystaniem kdialog)
+#pl:    quoter gui walk [ <int> <step> ]                        - tryb spacerowy gui
 #pl:    quoter loop gui [ num | random ]                        - gui w pętli
 #pl: Możesz wykorzystać własny plik z cytatami według wzoru 'autor(rozdzielacz)cytat', przykład:
 #pl: René Descartes;Cogito ergo sum
@@ -68,6 +72,7 @@ __lang_pl() {
     menuApp="W menu aplikacji"
     bothGo="W obu miejscach"
     handlerQuestion="Czy dodać handler dla 'command not found'?"
+    chooseStep="Wybierz co który cytat ma być wyświetlany:"
 }
 __lang_eng() {
     quoterTitle="Quoter"
@@ -104,6 +109,7 @@ __lang_eng() {
     menuApp="In app menu"
     bothGo="In both places"
     handlerQuestion="Do you want handler for 'command not found'?"
+    chooseStep="Choose step for quotes:"
 }
 __setlang() {
     case "$LANG" in
@@ -189,6 +195,7 @@ __configchanger() {
 
 __display() {
     case "$1" in
+        "iwantstep") echo "$chooseStep" ;;
         "handlerquestion") echo "$handlerQuestion" ;;
         "desktopfileask") echo -e "$desktopFileAsk" ;;
         "desktopfile") echo -e "$desktopFileAskList" ;;
@@ -206,6 +213,7 @@ __display() {
 
 __displaygui() {
     case "$1" in
+        "iwantstep") step=$(kdialog --title "$quoterTitle" --inputbox "$chooseStep" "1") ; button=$? ;;
         "handlerquestion") kdialog --title "$quoterTitle" --yesno "$handlerQuestion" ; button=$? ;;
         "wheregodesktopfile") answer2=$(kdialog --title "$quoterTitle" --menu "$whereGoDesktopGUI" 1 "$desktopFolder" 2 "$menuApp" 3 "$bothGo") ; button=$? ;;
         "desktopfile") answer1=$(kdialog --title "$quoterTitle" --menu "$desktopFileAskGUI" 1 "quoter gui" 2 "quoter gui random" 3 "quoter gui num" 4 "quoter gui day" 5 "quoter loop gui" 6 "quoter loop gui random" 7 "quoter loop gui num") ; button=$? ;;
@@ -299,7 +307,6 @@ __day() {
 
 __random() {
 #    echo "random"
-    local lines=$((lines+1))
     getline=$((1 + "$RANDOM" % "$lines"))
     __getquote
 }
@@ -382,13 +389,7 @@ __numbercli() {
     else
         yournumber="$secpar"
     fi
-    if [[ ! "$yournumber" =~ ^[0-9]+$ ]]
-    then
-        __error num
-    elif [[ "$yournumber" -lt 1 ]] || [[ "$yournumber" -gt $lines ]]
-    then
-        __error num
-    fi
+    __numbercheckcli
     __number
     __display
     __isloop
@@ -396,10 +397,20 @@ __numbercli() {
 
 __iwantnumcli() {
 #    echo "iwantnumcli"
-    if [[ ! $yournumber ]]
-    then
+#    if [[ ! $yournumber ]]
+#    then
         __display iwantnum
         read yournumber
+#    fi
+}
+
+__numbercheckcli() {
+    if [[ ! "$yournumber" =~ ^[0-9]+$ ]]
+    then
+        __error num
+    elif [[ "$yournumber" -lt 1 ]] || [[ "$yournumber" -gt $lines ]]
+    then
+        __error num
     fi
 }
 
@@ -415,16 +426,47 @@ __daycli() {
 
 __interactivecli() {
 #    echo "interactivecli"
-    __display interactive
+    __display interactive # todo poprawić dla walkcli
     read answer
     case $answer in
         "1") __random ;;
         "2") __day ;;
-        "3") __iwantnumcli 
+        "3") __iwantnumcli
+            __numbercheckcli # todo noexit
             __number ;;
+        #"4") __walkcli # todo poprawić, żeby uwzględniało int i loop
         "4") exit 0
     esac
     __display
+    if [[ ! $firstpar = "loop" ]]
+    then
+        exit 0
+    fi
+}
+
+__walkcli() {
+    if [[ ! $secpar ]]
+    then
+        __iwantnumcli
+        __display iwantstep
+        read step
+    elif [[ ! $thirdpar ]]
+    then
+        yournumber=$secpar
+        step=1
+    else
+        yournumber=$secpar
+        step=$thirdpar
+    fi
+    __numbercheckcli
+    until [[ $yournumber -gt $lines ]]
+    do
+        __number
+        __display
+        yournumber=$(($yournumber+$step))
+        __youwantexitcli
+    done
+    exit 0
 }
 
 ###################################################################
@@ -438,6 +480,7 @@ __gui() {
         "day") __daygui ;;
         "num") __numbergui ;;
         "random") __randomgui ;;
+        "walk") __walkgui ;;
         *) __interactivegui
     esac
 }
@@ -487,12 +530,13 @@ __configui() {
 
 __interactivegui() {
 #    echo "interactivegui"
-    __displaygui interactive
+    __displaygui interactive # todo poprawić dla walkgui
     case $answer in
         "1") __random ;;
         "2") __day ;;
-        "3") __displaygui iwantnum 
+        "3") __displaygui iwantnum # todo sprawdzanie czy anulowano, sprawdzanie numeru jak w cli
             __number ;;
+        #"5") __walkgui # todo poprawić żeby uwzględniało loop
         "4") __configui ;;
         *) exit 0
     esac
@@ -537,6 +581,30 @@ __daygui() {
     __day
     __displaygui
     __isclosed
+}
+
+__walkgui() {
+    if [[ ! $thirdpar ]]
+    then
+        __displaygui iwantnum
+        __displaygui iwantstep
+    elif [[ ! $fourthpar ]]
+    then
+        yournumber=$thirdpar
+        step=1
+    else
+        yournumber=$thirdpar
+        step=$fourthpar
+    fi
+    __numbercheckcli
+    until [[ $yournumber -gt $lines ]]
+    do
+        __number
+        __displaygui
+        yournumber=$(($yournumber+$step))
+        __isclosed
+    done
+    exit 0
 }
 
 ###################################################################
@@ -599,11 +667,15 @@ __isloop() {
     then
         exit 0
     else
-        read x
-        if [[ $x = "q" ]] || [[ $x = "quit" ]] || [[ $x = "exit" ]]
-        then
-            exit 0
-        fi
+        __youwantexitcli
+    fi
+}
+
+__youwantexitcli() {
+    read x
+    if [[ $x = "q" ]] || [[ $x = "quit" ]] || [[ $x = "exit" ]]
+    then
+        exit 0
     fi
 }
 
@@ -715,6 +787,7 @@ __createdesktopfile() {
 firstpar="$1"
 secpar="$2"
 thirdpar="$3"
+fourthpar="$4"
 workdir="$( cd "$( dirname "$0" )" &> /dev/null && pwd )"  # full path to directory where is placed this script
 config="$workdir/quoter.conf"
 
@@ -730,5 +803,6 @@ case "$firstpar" in
     "help") __help ; exit 0 ;;
     "int") __interactivecli ;;
     "loop") __loop ;;
+    "walk") __walkcli ;;
     *) __randomcli
 esac
