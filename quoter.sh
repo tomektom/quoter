@@ -49,6 +49,7 @@ __lang_pl() {
     chosePath="Podaj pełną ścieżkę do pliku z cytatami"
     choseDivider="Podaj rozdzielacz pól"
     question="Co chcesz zrobić? Dostępne opcje:\n 1) Losowy cytat\n 2) Cytat dnia\n 3) Wybrany cytat\n 4) Zakończ"
+    questionNoLoop="Co chcesz zrobić? Dostępne opcje:\n 1) Losowy cytat\n 2) Cytat dnia\n 3) Wybrany cytat\n 4) Tryb spacerowy\n 5) Zakończ"
     chosePathGUI="Wybierz plik z cytatami"
     configurationTextTitle="Konfiguracja"
     choseOption="Wybierz opcję:"
@@ -60,6 +61,7 @@ __lang_pl() {
     dayChoice="Cytat dnia"
     numberChoice="Wybrany cytat"
     configChoice="Skonfiguruj Quoter"
+    walkChoice="Tryb spacerowy"
     cancelled="Anulowano operację"
     wrongPathError="Podano błędną ścieżkę"
     aliasQuestion="Czy dodać alias do .bashrc i .zshrc?"
@@ -86,6 +88,7 @@ __lang_eng() {
     chosePath="Enter full path to quotes file"
     choseDivider="Enter field divider"
     question="What you want do? Available options:\n 1) Random quote\n 2) Quote of the day\n 3) Selected quote\n 4) Exit"
+    questionNoLoop="What you want do? Available options:\n 1) Random quote\n 2) Quote of the day\n 3) Selected quote\n 4) Walk mode\n 5) Exit"
     chosePathGUI="Choose file with quotes"
     configurationTextTitle="Configuration"
     choseOption="Choose option:"
@@ -97,6 +100,7 @@ __lang_eng() {
     dayChoice="Quote of the day"
     numberChoice="Selected quote"
     configChoice="Configure Quoter"
+    walkChoice="Walk mode"
     cancelled="Operation cancelled"
     wrongPathError="Entered wrong path"
     aliasQuestion="Do you want alias in .bashrc and .zshrc?"
@@ -202,6 +206,7 @@ __display() {
         "wheregodesktopfile") echo -e "$whereGoDesktop" ;;
         "aliasquestion") echo -e "$aliasQuestion" ;;
         "interactive") echo -e "$question" ;;
+        "interactivenoloop") echo -e "$questionNoLoop" ;;
         "first") echo -e "\n$firstRun" ;;
         "chosepath") echo "$chosePath" ;;
         "chosedivider") echo "$choseDivider" ;;
@@ -219,6 +224,7 @@ __displaygui() {
         "desktopfile") answer1=$(kdialog --title "$quoterTitle" --menu "$desktopFileAskGUI" 1 "quoter gui" 2 "quoter gui random" 3 "quoter gui num" 4 "quoter gui day" 5 "quoter loop gui" 6 "quoter loop gui random" 7 "quoter loop gui num") ; button=$? ;;
         "aliasquestion") kdialog --yesno "$aliasQuestion" ; button=$? ;; 
         "interactive") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$configChoice") ; button=$? ;;
+        "interactivenoloop") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$walkChoice" "5" "$configChoice") ; button=$? ;;        
         "first") choice=$(kdialog --menu "$firstRunGUI" "default" "$choiceDefault" "custom" "$choiceConfiguration") ; button=$? ;;
         "chosepath") pathToFile=$(kdialog --title "$chosePathGUI" --getopenfilename "$HOME") ; button=$? ;;
         "chosedivider") customDivider=$(kdialog --title "$configurationTextTitle" --inputbox "$choseDivider" "") ; button=$? ;;
@@ -396,12 +402,8 @@ __numbercli() {
 }
 
 __iwantnumcli() {
-#    echo "iwantnumcli"
-#    if [[ ! $yournumber ]]
-#    then
-        __display iwantnum
-        read yournumber
-#    fi
+    __display iwantnum
+    read yournumber
 }
 
 __numbercheckcli() {
@@ -426,25 +428,36 @@ __daycli() {
 
 __interactivecli() {
 #    echo "interactivecli"
-    __display interactive # todo poprawić dla walkcli
-    read answer
-    case $answer in
-        "1") __random ;;
-        "2") __day ;;
-        "3") __iwantnumcli
-            __numbercheckcli # todo noexit
-            __number ;;
-        #"4") __walkcli # todo poprawić, żeby uwzględniało int i loop
-        "4") exit 0
-    esac
-    __display
-    if [[ ! $firstpar = "loop" ]]
+    if [[ $firstpar = "loop" ]]
     then
+        __display interactive
+        read answer
+        case $answer in
+            "1") __random ;;
+            "2") __day ;;
+            "3") __iwantnumcli
+                __numbercheckcli # todo noexit
+                __number ;;
+            "4") exit 0
+        esac
+        __display
+    else
+        __display interactivenoloop
+        read answer
+        case $answer in
+            "1") __random ;;
+            "2") __day ;;
+            "3") __iwantnumcli
+                __numbercheckcli # todo noexit
+                __number ;;
+            "4") __walkcli ;;
+            "5") exit 0
+        esac
         exit 0
     fi
 }
 
-__walkcli() {
+__walkcli() { # todo sprawdzanie poprawności
     if [[ ! $secpar ]]
     then
         __iwantnumcli
@@ -528,20 +541,50 @@ __configui() {
     __displaygui configchanged
 }
 
+__numbercheckgui() {
+    if [[ ! "$yournumber" =~ ^[0-9]+$ ]]
+    then
+        __errorgui num
+    elif [[ "$yournumber" -lt 1 ]] || [[ "$yournumber" -gt $lines ]]
+    then
+        __errorgui num
+    fi
+}
+
 __interactivegui() {
 #    echo "interactivegui"
-    __displaygui interactive # todo poprawić dla walkgui
-    case $answer in
-        "1") __random ;;
-        "2") __day ;;
-        "3") __displaygui iwantnum # todo sprawdzanie czy anulowano, sprawdzanie numeru jak w cli
-            __number ;;
-        #"5") __walkgui # todo poprawić żeby uwzględniało loop
-        "4") __configui ;;
-        *) exit 0
-    esac
-    __displaygui
-    __isclosed
+    if [[ $firstpar = "loop" ]]
+    then
+        __displaygui interactive
+        case $answer in
+            "1") __random ;;
+            "2") __day ;;
+            "3") __displaygui iwantnum
+                __isclosed
+                __numbercheckgui
+                __number ;;
+            "4") __configui ;;
+            *) exit 0
+        esac
+        __displaygui
+        __isclosed
+    else
+        __displaygui interactivenoloop
+        case $answer in
+            "1") __random ;;
+            "2") __day ;;
+            "3") __displaygui iwantnum
+                __isclosed
+                __numbercheckgui
+                __number ;;
+            "4") __walkgui ;;
+            "5") __configui ;;
+            *) exit 0
+        esac
+        __displaygui
+        __isclosed
+    fi
+    
 }
 
 __randomgui() {
@@ -583,7 +626,7 @@ __daygui() {
     __isclosed
 }
 
-__walkgui() {
+__walkgui() { # todo sprawdzanie poprawności
     if [[ ! $thirdpar ]]
     then
         __displaygui iwantnum
