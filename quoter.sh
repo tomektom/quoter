@@ -453,6 +453,7 @@ __interactivecli() {
             "4") __walkcli ;;
             "5") exit 0
         esac
+        __display
         exit 0
     fi
 }
