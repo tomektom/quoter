@@ -2,35 +2,37 @@
 
 # Default help
 #eng: Simple inspirational quotes. Usage:
-#eng:   quoter                                                         – display random quote
-#eng:   quoter help                                                    - display help
-#eng:   quoter day                                                     - display quote of day
-#eng:   quoter num [ <int> ]                                           - display quote from this line
-#eng:   quoter config                                                  - configuration
-#eng:   quoter int                                                     - interactive mode
-#eng:   quoter walk [ <int> <step> ]                                   - walk mode
-#eng:   quoter add                                                     - add quote
-#eng:   quoter loop [ random | num | int ]                             - quoter in loop
-#eng:   quoter gui [ random | day | num [ <int> ] | config | add ]     - gui (with kdialog)
-#eng:   quoter gui walk [ <int> <step> ]                               - walk mode gui
-#eng:   quoter loop gui [ num | random ]                               - gui in loop
+#eng:   quoter                                                              – display random quote
+#eng:   quoter help                                                         - display help
+#eng:   quoter day                                                          - display quote of day
+#eng:   quoter num [ <int> ]                                                - display quote from this line
+#eng:   quoter config                                                       - configuration
+#eng:   quoter int                                                          - interactive mode
+#eng:   quoter walk [ <int> <step> ]                                        - walk mode
+#eng:   quoter add                                                          - add quote
+#eng:   quoter remove                                                       - remove quote
+#eng:   quoter loop [ random | num | int ]                                  - quoter in loop
+#eng:   quoter gui [ random | day | num [ <int> ] | config | add | remove ] - gui (with kdialog)
+#eng:   quoter gui walk [ <int> <step> ]                                    - walk mode gui
+#eng:   quoter loop gui [ num | random ]                                    - gui in loop
 #eng: You can use custom file witch quotes with pattern `author(divider)quote`, example:
 #eng: René Descartes;Cogito ergo sum
 
 # Polski help
 #pl: Proste inspirujące cytaty. Instrukcja:
-#pl:    quoter                                                       - wyświetl losowy cytat
-#pl:    quoter help                                                  - wyświetl pomoc
-#pl:    quoter day                                                   - wyświetl cytat dnia
-#pl:    quoter num [ <int> ]                                         - wyświetl cytat z podanej linii
-#pl:    quoter config                                                - konfiguracja
-#pl:    quoter int                                                   - tryb interaktywny
-#pl:    quoter walk [ <int> <step> ]                                 - tryb spacerowy
-#pl:    quoter add                                                   - dodaj cytat
-#pl:    quoter loop [ random | num | int ]                           - quoter w pętli
-#pl:    quoter gui [ random | day | num [ <int> ] | config | add]    - gui (z wykorzystaniem kdialog)
-#pl:    quoter gui walk [ <int> <step> ]                             - tryb spacerowy gui
-#pl:    quoter loop gui [ num | random ]                             - gui w pętli
+#pl:    quoter                                                              - wyświetl losowy cytat
+#pl:    quoter help                                                         - wyświetl pomoc
+#pl:    quoter day                                                          - wyświetl cytat dnia
+#pl:    quoter num [ <int> ]                                                - wyświetl cytat z podanej linii
+#pl:    quoter config                                                       - konfiguracja
+#pl:    quoter int                                                          - tryb interaktywny
+#pl:    quoter walk [ <int> <step> ]                                        - tryb spacerowy
+#pl:    quoter add                                                          - dodaj cytat
+#pl:    quoter remove                                                       - usuń cytat
+#pl:    quoter loop [ random | num | int ]                                  - quoter w pętli
+#pl:    quoter gui [ random | day | num [ <int> ] | config | add | remove ] - gui (z wykorzystaniem kdialog)
+#pl:    quoter gui walk [ <int> <step> ]                                    - tryb spacerowy gui
+#pl:    quoter loop gui [ num | random ]                                    - gui w pętli
 #pl: Możesz wykorzystać własny plik z cytatami według wzoru 'autor(rozdzielacz)cytat', przykład:
 #pl: René Descartes;Cogito ergo sum
 
@@ -50,8 +52,8 @@ __lang_pl() {
   configChanged="Zmieniono konfigurację"
   chosePath="Podaj pełną ścieżkę do pliku z cytatami"
   choseDivider="Podaj rozdzielacz pól"
-  question="Co chcesz zrobić? Dostępne opcje:\n 1) Losowy cytat\n 2) Cytat dnia\n 3) Wybrany cytat\n 4) Dodaj cytat\n 5) Zakończ"
-  questionNoLoop="Co chcesz zrobić? Dostępne opcje:\n 1) Losowy cytat\n 2) Cytat dnia\n 3) Wybrany cytat\n 4) Tryb spacerowy\n 5) Dodaj cytat\n 6) Zakończ"
+  question="Co chcesz zrobić? Dostępne opcje:\n 1) Losowy cytat\n 2) Cytat dnia\n 3) Wybrany cytat\n 4) Dodaj cytat\n 5) Usuń cytat\n 6) Zakończ"
+  questionNoLoop="Co chcesz zrobić? Dostępne opcje:\n 1) Losowy cytat\n 2) Cytat dnia\n 3) Wybrany cytat\n 4) Tryb spacerowy\n 5) Dodaj cytat\n 6) Usuń cytat\n 7) Zakończ"
   chosePathGUI="Wybierz plik z cytatami"
   configurationTextTitle="Konfiguracja"
   choseOption="Wybierz opcję:"
@@ -65,6 +67,7 @@ __lang_pl() {
   configChoice="Skonfiguruj Quoter"
   walkChoice="Tryb spacerowy"
   addChoice="Dodaj ctytat"
+  removeChoice="Usuń cytat"
   cancelled="Anulowano operację"
   wrongPathError="Podano błędną ścieżkę"
   aliasQuestion="Czy dodać alias do .bashrc i .zshrc?"
@@ -82,6 +85,10 @@ __lang_pl() {
   gimmeQuoteAsk="Podaj cytat:"  
   thisIsEmpty="Nie dodano cytatu, musisz podać autora i cytat."
   nextAddAsk="Czy chcesz dodać kolejny cytat?"
+  removeNumberAsk="Podaj numer cytatu do usunięcia:"
+  areYouSure="Jesteś pewien, że chcesz usunąć ten cytat?"
+  nextRemoveAsk="Czy chcesz usunąć kolejny cytat?"
+  quoteRemoved="Cytat usunięty."
 }
 __lang_eng() {
   quoterTitle="Quoter"
@@ -94,8 +101,8 @@ __lang_eng() {
   configChanged="Configuration changed"
   chosePath="Enter full path to quotes file"
   choseDivider="Enter field divider"
-  question="What you want do? Available options:\n 1) Random quote\n 2) Quote of the day\n 3) Selected quote\n 4) Add quote\n 5) Exit"
-  questionNoLoop="What you want do? Available options:\n 1) Random quote\n 2) Quote of the day\n 3) Selected quote\n 4) Walk mode\n 5) Add quote\n 6) Exit"
+  question="What you want do? Available options:\n 1) Random quote\n 2) Quote of the day\n 3) Selected quote\n 4) Add quote\n 5) Remove quote\n 6) Exit"
+  questionNoLoop="What you want do? Available options:\n 1) Random quote\n 2) Quote of the day\n 3) Selected quote\n 4) Walk mode\n 5) Add quote\n 6) Remove quote/n 7) Exit"
   chosePathGUI="Choose file with quotes"
   configurationTextTitle="Configuration"
   choseOption="Choose option:"
@@ -109,6 +116,7 @@ __lang_eng() {
   configChoice="Configure Quoter"
   walkChoice="Walk mode"
   addChoice="Add quote"
+  removeChoice="Remove quote"
   cancelled="Operation cancelled"
   wrongPathError="Entered wrong path"
   aliasQuestion="Do you want alias in .bashrc and .zshrc?"
@@ -126,6 +134,10 @@ __lang_eng() {
   gimmeQuoteAsk="Quote:"
   thisIsEmpty="No quote has been added, you need to give author and quote."
   nextAddAsk="Do you want add anothe quote?"
+  removeNumberAsk="Give quote number to remove:"
+  areYouSure="Are you sure that you want remove that quote?"
+  nextRemoveAsk="Do you want remove another quote?"
+  quoteRemoved="Quote removed."
 }
 __setlang() {
   case "$LANG" in
@@ -211,6 +223,10 @@ __configchanger() {
 
 __display() {
   case "$1" in
+    "removed") echo "$quoteRemoved" ;;
+    "removenumberask") echo "$removeNumberAsk" ;;
+    "areyousure") echo "$areYouSure" ;;
+    "nextremoveask") echo "$nextRemoveAsk" ;;
     "gimmeauthor") echo "$gimmeAuthorAsk" ;;
     "gimmequote") echo "$gimmeQuoteAsk" ;;
     "empty") echo "$thisIsEmpty" ;;
@@ -234,6 +250,10 @@ __display() {
 
 __displaygui() {
   case "$1" in
+    "removed") kdialog --title "$quoterTitle" --msgbox "$quoteRemoved" ; button=$? ;;
+    "removenumberask") removenumber=$(kdialog --title "$quoterTitle" --inputbox "$removeNumberAsk") ; button=$? ;;
+    "areyousure") kdialog --title "$quoterTitle" --yesno "<h1>$areYouSure</h1><br><h3 align=justify>$quote</h3><br><h1 align=center>$author</h1><br>" ; button=$? ;;
+    "nextremoveask") kdialog --title "$quoterTitle" --yesno "$nextRemoveAsk" ; button=$? ;;
     "gimmeauthor") gimmeAuthor=$(kdialog --title "$quoterTitle" --inputbox "$gimmeAuthorAsk") ; button=$? ;;
     "gimmequote") gimmeQuote=$(kdialog --title "$quoterTitle" --inputbox "$gimmeQuoteAsk") ; button=$? ;;
     "empty") kdialog --title "$quoterTitle" --sorry "$thisIsEmpty" ; button=$? ;;
@@ -243,8 +263,8 @@ __displaygui() {
     "wheregodesktopfile") answer2=$(kdialog --title "$quoterTitle" --menu "$whereGoDesktopGUI" 1 "$desktopFolder" 2 "$menuApp" 3 "$bothGo") ; button=$? ;;
     "desktopfile") answer1=$(kdialog --title "$quoterTitle" --menu "$desktopFileAskGUI" 1 "quoter gui" 2 "quoter gui random" 3 "quoter gui num" 4 "quoter gui day" 5 "quoter loop gui" 6 "quoter loop gui random" 7 "quoter loop gui num") ; button=$? ;;
     "aliasquestion") kdialog --yesno "$aliasQuestion" ; button=$? ;; 
-    "interactive") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$addChoice" "5" "$configChoice") ; button=$? ;;
-    "interactivenoloop") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$walkChoice" "5" "$addChoice" "6" "$configChoice") ; button=$? ;;        
+    "interactive") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$addChoice" "5" "$removeChoice" "6" "$configChoice") ; button=$? ;;
+    "interactivenoloop") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$walkChoice" "5" "$addChoice" "6" "$removeChoice" "7" "$configChoice") ; button=$? ;;        
     "first") choice=$(kdialog --menu "$firstRunGUI" "default" "$choiceDefault" "custom" "$choiceConfiguration") ; button=$? ;;
     "chosepath") pathToFile=$(kdialog --title "$chosePathGUI" --getopenfilename "$HOME") ; button=$? ;;
     "chosedivider") customDivider=$(kdialog --title "$configurationTextTitle" --inputbox "$choseDivider" "") ; button=$? ;;
@@ -457,9 +477,10 @@ __interactivecli() {
         __numbercheckcli # todo noexit
         __number ;;
       "4") __addquotecli ;;
-      "5") exit 0
+      "5") __removequotecli ;;
+      *) exit 0
     esac
-    if [[ $answer != "4" ]]
+    if [[ $answer != "4" ]] && [[ $answer != "5" ]]
     then
       __display
     fi
@@ -474,9 +495,10 @@ __interactivecli() {
           __number ;;
       "4") __walkcli ;;
       "5") __addquotecli ;;
-      "6") exit 0
+      "6") __removequotecli ;;
+      *) exit 0
     esac
-    if [[ $answer != "5" ]]
+    if [[ $answer != "5" ]] && [[ $answer != "6" ]]
     then
       __display
     fi
@@ -522,6 +544,7 @@ __gui() {
     "random") __randomgui ;;
     "walk") __walkgui ;;
     "add") __addquotegui ;;
+    "remove") __removequotegui ;;
     *) __interactivegui
   esac
 }
@@ -588,14 +611,15 @@ __interactivegui() {
       "1") __random ;;
       "2") __day ;;
       "3") __displaygui iwantnum
-          __isclosed
-          __numbercheckgui
-          __number ;;
+        __isclosed
+        __numbercheckgui
+        __number ;;
       "4") __addquotegui ;;
-      "5") __configui ;;
+      "5") __removequotegui ;;
+      "6") __configui ;;
       *) exit 0
     esac
-    if [[ $answer != "4" ]]
+    if [[ $answer != "4" ]] && [[ $answer != "5" ]]
     then
       __displaygui
       __isclosed
@@ -606,15 +630,16 @@ __interactivegui() {
       "1") __random ;;
       "2") __day ;;
       "3") __displaygui iwantnum
-          __isclosed
-          __numbercheckgui
-          __number ;;
+        __isclosed
+        __numbercheckgui
+        __number ;;
       "4") __walkgui ;;
       "5") __addquotegui ;;
-      "6") __configui ;;
+      "6") __removequotegui ;;
+      "7") __configui ;;
       *) exit 0
     esac
-    if [[ $answer != "5" ]]
+    if [[ $answer != "5" ]] && [[ $answer != "6" ]]
     then
       __displaygui
       __isclosed
@@ -691,14 +716,14 @@ __walkgui() { # todo sprawdzanie poprawności
 ###################################################################
 
 __iscancelled() {
-#    echo "iscancelled"
-    if [[ $button = 1 ]]
-    then
-        case $1 in
-            "cancel") __errorgui cancel ;;
-            *) exit 0
-        esac
-    fi
+#  echo "iscancelled"
+  if [[ $button = 1 ]]
+  then
+    case $1 in
+      "cancel") __errorgui cancel ;;
+      *) exit 0
+    esac
+  fi
 }
 
 __isclosed() {
@@ -908,6 +933,51 @@ __addquotegui() {
   fi
 }
 
+__removequote() {
+  removenumber+="d"
+#  removenumber=$(echo "'$removenumber'")
+  sed -i $removenumber $fileQuotes
+}
+
+__removequotecli() {
+  __display removenumberask
+  read removenumber
+  yournumber="$removenumber"
+  __number
+  __display
+  __display areyousure
+  read -p "[y/N]: " x
+  if [[ $x = "y" ]] || [[ $x = "Y" ]]
+  then
+    __removequote
+    __display removed
+  fi
+  __display nextremoveask
+  read -p "[y/N]: " x
+  if [[ $x = "y" ]] || [[ $x = "Y" ]]
+  then
+    __removequotecli
+  fi
+}
+
+__removequotegui() {
+  __displaygui removenumberask
+  __iscancelled
+  yournumber="$removenumber"
+  __number
+  __displaygui areyousure
+  if [[ $button = "0" ]]
+  then
+    __removequote
+    __displaygui removed
+  fi
+  __displaygui nextremoveask
+  if [[ $button = "0" ]]
+  then
+    __removequotegui
+  fi
+}
+
 ###################################################################
 # end functions, main program
 ###################################################################
@@ -933,62 +1003,8 @@ case "$firstpar" in
   "loop") __loop ;;
   "walk") __walkcli ;;
   "add") __addquotecli ;;
+  "remove") __removequotecli ;;
   *) __randomcli
 esac
 
 exit 0
-
-# Todo dodawanie własnych cytatów z poziomu programu i usuwanie ich
-# todo dodać add do interactive i loop
-
-__removequote() {
-  echo "todo"
-  removenumber+="d"
-  removenumber=$(echo "'$removenumber'")
-  sed $removenumber $fileQuotes
-  unset removenumber
-}
-
-"removenumberask") echo "$removeNumberAsk" ;;
-"areyousure") echo "$areYouSure" ;;
-"nextremoveask") echo "$nextRemoveAsk" ;;
-
-removeNumberAsk=""
-areYouSure=""
-nextRemoveAsk=""
-
-removeNumberAsk=""
-areYouSure=""
-nextRemoveAsk=""
-
-__removequotecli() {
-  __display removenumberask
-  read removenumber
-  yournumber="$removenumber"
-  __number
-  __display
-  __display areyousure
-  read -p "[y/N]: " x
-  if [[ $x = "y" ]] || [[ $x = "Y" ]]
-  then
-    __removequote
-  fi
-  __display nextremoveask
-  read -p "[y/N]: " x
-  if [[ $x = "y" ]] || [[ $x = "Y" ]]
-  then
-    __removequotecli
-  fi
-}
-
-__removequotegui() {
-  echo "todo"
-  __displaygui removenumberask
-  yournumber="$removenumber"
-  __number
-  __displaygui
-  __display areyousure
-  # magia
-  __displaygui nextremoveask
-  # magia
-}
