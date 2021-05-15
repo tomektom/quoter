@@ -5,20 +5,22 @@ This small script display you inspirational quote. Copy all wherever you want an
 ## Help
 
 ```
-Simple inspirational quotes. Usage:
-   quoter                                                  – display random quote
-   quoter help                                             - display help
-   quoter day                                              - display quote of day
-   quoter num [ <int> ]                                    - display quote from this line
-   quoter config                                           - configuration
-   quoter int                                              - interactive mode
-   quoter walk [ <int> <step> ]                            - walk mode
-   quoter loop [ random | num | int ]                      - quoter in loop
-   quoter gui [ random | day | num [ <int> ] | config ]    - gui (with kdialog)
-   quoter gui walk [ <int> <step> ]                        - walk mode
-   quoter loop gui [ num | random ]                        - gui in loop
-You can use custom file witch quotes with pattern `author(divider)quote`, example:
-René Descartes;Cogito ergo sum
+ Simple inspirational quotes. Usage:
+   quoter                                                              – display random quote
+   quoter help                                                         - display help
+   quoter day                                                          - display quote of day
+   quoter num [ <int> ]                                                - display quote from this line
+   quoter config                                                       - configuration
+   quoter int                                                          - interactive mode
+   quoter walk [ <int> <step> ]                                        - walk mode
+   quoter add                                                          - add quote
+   quoter remove                                                       - remove quote
+   quoter loop [ random | num | int ]                                  - quoter in loop
+   quoter gui [ random | day | num [ <int> ] | config | add | remove ] - gui (with kdialog)
+   quoter gui walk [ <int> <step> ]                                    - walk mode gui
+   quoter loop gui [ num | random ]                                    - gui in loop
+ You can use custom file witch quotes with pattern `author(divider)quote`, example:
+ René Descartes;Cogito ergo sum
 ```
 
 ## Command not found handler
