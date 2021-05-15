@@ -64,6 +64,7 @@ __lang_pl() {
   numberChoice="Wybrany cytat"
   configChoice="Skonfiguruj Quoter"
   walkChoice="Tryb spacerowy"
+  addChoice="Dodaj ctytat"
   cancelled="Anulowano operację"
   wrongPathError="Podano błędną ścieżkę"
   aliasQuestion="Czy dodać alias do .bashrc i .zshrc?"
@@ -107,6 +108,7 @@ __lang_eng() {
   numberChoice="Selected quote"
   configChoice="Configure Quoter"
   walkChoice="Walk mode"
+  addChoice="Add quote"
   cancelled="Operation cancelled"
   wrongPathError="Entered wrong path"
   aliasQuestion="Do you want alias in .bashrc and .zshrc?"
@@ -241,8 +243,8 @@ __displaygui() {
     "wheregodesktopfile") answer2=$(kdialog --title "$quoterTitle" --menu "$whereGoDesktopGUI" 1 "$desktopFolder" 2 "$menuApp" 3 "$bothGo") ; button=$? ;;
     "desktopfile") answer1=$(kdialog --title "$quoterTitle" --menu "$desktopFileAskGUI" 1 "quoter gui" 2 "quoter gui random" 3 "quoter gui num" 4 "quoter gui day" 5 "quoter loop gui" 6 "quoter loop gui random" 7 "quoter loop gui num") ; button=$? ;;
     "aliasquestion") kdialog --yesno "$aliasQuestion" ; button=$? ;; 
-    "interactive") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$configChoice") ; button=$? ;;
-    "interactivenoloop") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$walkChoice" "5" "$configChoice") ; button=$? ;;        
+    "interactive") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$addChoice" "5" "$configChoice") ; button=$? ;;
+    "interactivenoloop") answer=$(kdialog --title "$quoterTitle" --menu "$choseOption" "1" "$randomChoice" "2" "$dayChoice" "3" "$numberChoice" "4" "$walkChoice" "5" "$addChoice" "6" "$configChoice") ; button=$? ;;        
     "first") choice=$(kdialog --menu "$firstRunGUI" "default" "$choiceDefault" "custom" "$choiceConfiguration") ; button=$? ;;
     "chosepath") pathToFile=$(kdialog --title "$chosePathGUI" --getopenfilename "$HOME") ; button=$? ;;
     "chosedivider") customDivider=$(kdialog --title "$configurationTextTitle" --inputbox "$choseDivider" "") ; button=$? ;;
@@ -589,10 +591,11 @@ __interactivegui() {
           __isclosed
           __numbercheckgui
           __number ;;
-      "4") __configui ;;
+      "4") __addquotegui ;;
+      "5") __configui ;;
       *) exit 0
     esac
-    if [[ $answer != "5" ]]
+    if [[ $answer != "4" ]]
     then
       __displaygui
       __isclosed
@@ -607,10 +610,11 @@ __interactivegui() {
           __numbercheckgui
           __number ;;
       "4") __walkgui ;;
-      "5") __configui ;;
+      "5") __addquotegui ;;
+      "6") __configui ;;
       *) exit 0
     esac
-    if [[ $answer != "6" ]]
+    if [[ $answer != "5" ]]
     then
       __displaygui
       __isclosed
@@ -687,19 +691,14 @@ __walkgui() { # todo sprawdzanie poprawności
 ###################################################################
 
 __iscancelled() {
-#  echo "iscancelled"
-  if [[ $button = 1 ]]
-  then
-    if [[ $1 = "cancel" ]]
+#    echo "iscancelled"
+    if [[ $button = 1 ]]
     then
-      __errorgui cancel
-    elif [[ $firstpar = "loop" ]]
-    then
-      break
-    else
-      exit 0
+        case $1 in
+            "cancel") __errorgui cancel ;;
+            *) exit 0
+        esac
     fi
-  fi
 }
 
 __isclosed() {
@@ -892,21 +891,21 @@ __addquotecli() {
 }
 
 __addquotegui() {
-  while [[ 0 = 0 ]]
-  do
-    __displaygui gimmeauthor
-    __iscancelled
-    __displaygui gimmequote
-    __iscancelled
-    if [[ -n "$gimmeAuthor" ]] && [[ -n "$gimmeQuote" ]]
-    then
-      __addquote
-    else
-      __displaygui empty
-    fi
-    __displaygui nextaddask
-    __iscancelled
-  done
+  __displaygui gimmeauthor
+  __iscancelled
+  __displaygui gimmequote
+  __iscancelled
+  if [[ -n "$gimmeAuthor" ]] && [[ -n "$gimmeQuote" ]]
+  then
+    __addquote
+  else
+    __displaygui empty
+  fi
+  __displaygui nextaddask
+  if [[ $button = "0" ]]
+  then
+    __addquotegui
+  fi
 }
 
 ###################################################################
@@ -944,7 +943,10 @@ exit 0
 
 __removequote() {
   echo "todo"
-  sed '$removenumber d' $fileQuotes # todo znaleźć sposób, d musi być razem
+  removenumber+="d"
+  removenumber=$(echo "'$removenumber'")
+  sed $removenumber $fileQuotes
+  unset removenumber
 }
 
 "removenumberask") echo "$removeNumberAsk" ;;
